@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="ui/tokens.css">
   <link rel="stylesheet" href="ui/components.css">
-  <link rel="stylesheet" href="app.css?v=7">
+  <link rel="stylesheet" href="app.css?v=8">
   <script src="ui/ui-help.js" defer></script>
   <script src="app.js?v=9" defer></script>
 </head>
@@ -32,9 +32,9 @@
     </header>
 
     <section class="ui-card pr-notify-card" id="prNotifyCard" hidden>
-      <p class="pr-notify-lead">
-        정해진 시간에 알림을 받으려면 허용이 필요합니다.
-        <span class="ui-help">
+      <div class="pr-notify-lead-row">
+        <p class="pr-notify-lead">정해진 시간에 알림을 받으려면 허용이 필요합니다.</p>
+        <span class="ui-help pr-notify-help">
           <button type="button" class="ui-help-btn" aria-label="알림 허용 안내" aria-expanded="false">?</button>
           <div class="ui-help-popover" role="tooltip">
             <p><strong>알아두면 좋은 점</strong></p>
@@ -43,7 +43,7 @@
             <p>토스 미니앱에서는 토스 알림도 허용해 두는 게 좋아요.</p>
           </div>
         </span>
-      </p>
+      </div>
       <button type="button" class="ui-btn ui-btn-primary pr-notify-btn" id="prNotifyBtn">알림 켜기</button>
       <p class="pr-notify-hint" id="prNotifyHint"></p>
     </section>

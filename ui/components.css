@@ -524,9 +524,10 @@ body.ui-has-bottom-nav {
 }
 
 .ui-help-btn {
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
   padding: 0;
   border: var(--ui-border-width) solid var(--ui-border);
   border-radius: 50%;
@@ -541,7 +542,15 @@ body.ui-has-bottom-nav {
   align-items: center;
   justify-content: center;
   text-align: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.ui-help-btn::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
 }
 
 .ui-help-btn:hover,

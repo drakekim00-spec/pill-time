@@ -30,17 +30,36 @@
     var pop = helpEl.querySelector(".ui-help-popover");
     if (!btn || !pop) return;
 
+    var touchToggleLock = false;
+
     btn.addEventListener("click", function (e) {
+      e.preventDefault();
       e.stopPropagation();
+      if (touchToggleLock) return;
       toggle(helpEl, btn, pop);
     });
+
+    btn.addEventListener(
+      "touchend",
+      function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        touchToggleLock = true;
+        toggle(helpEl, btn, pop);
+        window.setTimeout(function () {
+          touchToggleLock = false;
+        }, 400);
+      },
+      { passive: false },
+    );
 
     pop.addEventListener("click", function (e) {
       e.stopPropagation();
     });
   });
 
-  document.addEventListener("click", function () {
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".ui-help")) return;
     closeAll(null);
   });
 

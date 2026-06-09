@@ -454,15 +454,30 @@
   background: linear-gradient(180deg, #f5f9ff 0%, #fff 100%);
 }
 
+.pr-notify-lead-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
 .pr-notify-lead {
-  margin: 0 0 12px;
+  margin: 0;
+  flex: 1 1 auto;
   font-size: 14px;
   line-height: 1.55;
 }
 
-.pr-notify-lead .ui-help {
-  margin-left: 4px;
-  vertical-align: middle;
+.pr-notify-help {
+  flex-shrink: 0;
+  margin-left: 0;
+  margin-top: 1px;
+  z-index: 2;
+}
+
+.pr-body .ui-help-popover {
+  min-width: 268px;
+  max-width: min(360px, calc(100vw - 32px));
 }
 
 .pr-notify-btn {
