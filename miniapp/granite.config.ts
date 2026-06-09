@@ -9,7 +9,7 @@ export default defineConfig({
   brand: {
     displayName: "약먹을시간",
     primaryColor: "#6ba8ff",
-    icon: "https://drakekim00-spec.github.io/pill-time/brand-icon.png",
+    icon: "https://raw.githubusercontent.com/drakekim00-spec/pill-time/main/brand-icon.png",
   },
   web: {
     host: "localhost",
