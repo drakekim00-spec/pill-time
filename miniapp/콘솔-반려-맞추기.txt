@@ -1,0 +1,19 @@
+약먹을시간 — 반려(아이콘·이름) 맞추기
+================================
+
+[반려 원인]
+  1. granite.config.ts 아이콘이 비어 있었음
+  2. displayName이 콘솔(약먹을시간)과 달랐음 (복약 알림)
+
+[코드에서 맞춘 것]
+  · displayName: 약먹을시간
+  · icon URL: https://drakekim00-spec.github.io/pill-time/brand-icon.png
+  · 아이콘 파일: miniapp/brand-icon.png (600×600, 콘솔에도 같은 파일 업로드)
+
+[콘솔에서 할 일]
+  1. 앱 정보 → 브랜드 이름: 약먹을시간 (띄어쓰기 없이)
+  2. 앱 정보 → 로고: miniapp/brand-icon.png 업로드 (600×600)
+  3. appName(영문 ID): pill-time 그대로
+
+[다시 올리기]
+  빌드-미니앱.bat → pill-time.ait → 콘솔 재등록

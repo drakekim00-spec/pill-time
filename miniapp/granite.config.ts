@@ -7,9 +7,9 @@ import { defineConfig } from "@apps-in-toss/web-framework/config";
 export default defineConfig({
   appName: "pill-time",
   brand: {
-    displayName: "복약 알림",
+    displayName: "약먹을시간",
     primaryColor: "#6ba8ff",
-    icon: "",
+    icon: "https://drakekim00-spec.github.io/pill-time/brand-icon.png",
   },
   web: {
     host: "localhost",

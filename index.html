@@ -5,21 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f0f3f7">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="복약 알림">
-  <title>복약 알림</title>
+  <meta name="apple-mobile-web-app-title" content="약먹을시간">
+  <title>약먹을시간</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="ui/tokens.css">
   <link rel="stylesheet" href="ui/components.css">
-  <link rel="stylesheet" href="app.css?v=9">
+  <link rel="stylesheet" href="app.css?v=11">
+  <script>
+    window.PR_CONFIG = window.PR_CONFIG || {
+      iapSkuPremium: "sub.uf9.mq6entjm.26cfc803f2",
+      bannerAdGroupIdTop: "ait.v2.live.100714c17799446f",
+      bannerAdGroupIdMid: "ait.v2.live.be9f36b5ccd746af",
+    };
+  </script>
+  <script type="module" src="pr-bootstrap.js"></script>
   <script src="ui/ui-help.js?v=2" defer></script>
-  <script src="app.js?v=10" defer></script>
+  <script src="app.js?v=12" defer></script>
 </head>
 <body class="ui-body pr-body">
   <div class="ui-container">
     <header class="pr-header">
       <div class="pr-header-top">
-        <div class="ui-brand">복약 <span class="ui-brand-accent">알림</span></div>
+        <div class="ui-brand">약먹을<span class="ui-brand-accent">시간</span></div>
         <button type="button" class="pr-premium-btn" id="prPremiumBtn">월 구독 2,200원</button>
       </div>
       <p class="pr-date" id="prTodayLabel">—</p>

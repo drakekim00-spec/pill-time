@@ -1,6 +1,6 @@
 {
-  "name": "복약 알림",
-  "short_name": "복약",
+  "name": "약먹을시간",
+  "short_name": "약먹을시간",
   "description": "약 먹을 시간 알림과 체크",
   "start_url": "./",
   "display": "standalone",
