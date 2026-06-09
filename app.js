@@ -523,21 +523,34 @@
   function renderNotifyCard() {
     var card = $("prNotifyCard");
     var hint = $("prNotifyHint");
+    var btn = $("prNotifyBtn");
     if (!card) return;
 
+    card.hidden = false;
+
+    if (btn) {
+      btn.hidden = false;
+      btn.classList.remove("is-on");
+      btn.disabled = false;
+      btn.textContent = "알림 켜기";
+    }
+
     if (!("Notification" in window)) {
-      card.hidden = false;
       if (hint) hint.textContent = "이 브라우저는 알림을 지원하지 않을 수 있어요.";
+      if (btn) btn.hidden = true;
       return;
     }
 
     if (Notification.permission === "granted") {
-      card.hidden = true;
-      if (hint) hint.textContent = "";
+      if (btn) {
+        btn.textContent = "알림 켜짐 ✓";
+        btn.disabled = true;
+        btn.classList.add("is-on");
+      }
+      if (hint) hint.textContent = "알림이 켜져 있어요. 정해진 시간에 알려 드릴게요.";
       return;
     }
 
-    card.hidden = false;
     if (hint) {
       if (Notification.permission === "denied") {
         hint.textContent = "알림이 꺼져 있어요. 브라우저 설정에서 이 사이트 알림을 허용해 주세요.";

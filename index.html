@@ -11,9 +11,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="ui/tokens.css">
   <link rel="stylesheet" href="ui/components.css">
-  <link rel="stylesheet" href="app.css?v=8">
-  <script src="ui/ui-help.js" defer></script>
-  <script src="app.js?v=9" defer></script>
+  <link rel="stylesheet" href="app.css?v=9">
+  <script src="ui/ui-help.js?v=2" defer></script>
+  <script src="app.js?v=10" defer></script>
 </head>
 <body class="ui-body pr-body">
   <div class="ui-container">
@@ -31,9 +31,9 @@
       </div>
     </header>
 
-    <section class="ui-card pr-notify-card" id="prNotifyCard" hidden>
-      <div class="pr-notify-lead-row">
-        <p class="pr-notify-lead">정해진 시간에 알림을 받으려면 허용이 필요합니다.</p>
+    <section class="ui-card pr-notify-card" id="prNotifyCard">
+      <div class="pr-notify-lead ui-title-with-help">
+        <span class="pr-notify-lead-text">정해진 시간에 알림을 받으려면 허용이 필요합니다.</span>
         <span class="ui-help pr-notify-help">
           <button type="button" class="ui-help-btn" aria-label="알림 허용 안내" aria-expanded="false">?</button>
           <div class="ui-help-popover" role="tooltip">
