@@ -1,0 +1,133 @@
+/**
+ * 앱인토스UI — 디자인 토큰 (토스 블루 강조 · v1 · 2026-06-04)
+ * 나만의 UI 복사본 — 연한 초록만 토스/TDS 블루 톤으로 변경
+ * 수정 시 앱인토스UI-최종-학습용.md 도 함께 업데이트
+ */
+:root {
+  /* 배경 — 쿨 그레이 (카드만 흰색) */
+  --ui-bg: #f0f3f7;
+  --ui-bg-card: #ffffff;
+  --ui-bg-sec: #e8edf3;
+  --ui-bg-ter: #d8e0ea;
+
+  /* 글자 */
+  --ui-text: #18181b;
+  --ui-text-sec: #18181b;
+  --ui-text-ter: #18181b;
+
+  /* 테두리 */
+  --ui-border-width: 0.5px;
+  --ui-border: #d0dae6;
+  --ui-border-hover: #b8c5d4;
+
+  /* 메인 강조 — 토스/TDS 연한 블루 (앱인토스 기본 #3182F6 계열) */
+  --ui-accent: #6ba8ff;
+  --ui-accent-hover: #4d94fc;
+  --ui-accent-bg: #e8f3ff;
+  --ui-accent-text: #226ed2;
+  --ui-on-accent: #ffffff;
+  --ui-accent-border: rgba(30, 40, 35, 0.38);
+  --ui-text-outline: 0.35px rgba(0, 0, 0, 0.42);
+  --ui-on-accent-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 1px rgba(0, 0, 0, 0.28);
+
+  /* 포인트 — 골드 (경고 주황·빨강과 구분) */
+  --ui-highlight: #c9a227;
+  --ui-highlight-bg: #fbf7e8;
+  --ui-highlight-text: #8a6f2a;
+  --ui-highlight-border: #ddc878;
+
+  /* 상태색 — 국내 시장 (상승 빨강 · 하락 파랑) */
+  --ui-up: #e53935;
+  --ui-up-bg: #ffebee;
+  --ui-up-text: #c62828;
+  --ui-up-border: #ef9a9a;
+  --ui-down: #1e88e5;
+  --ui-down-bg: #e3f2fd;
+  --ui-down-text: #1565c0;
+  --ui-down-border: #90caf9;
+  --ui-warn: #c62828;
+  --ui-warn-text: #c62828;
+  --ui-warn-bg: #fff0e0;
+  --ui-warn-border: rgba(30, 40, 35, 0.32);
+
+  /* LIVE — 생방송 느낌 (붉은 톤) */
+  --ui-live: #e53935;
+  --ui-live-text: #ffffff;
+
+  /* 보조 버튼 */
+  --ui-btn-sec: #e8edf3;
+  --ui-btn-sec-text: #3d5166;
+  --ui-btn-sec-border: #c5d0de;
+
+  /* 글꼴 */
+  --ui-font: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Noto Sans KR", system-ui, sans-serif;
+  --ui-font-size: 15px;
+  --ui-line-height: 1.55;
+
+  /* 간격 */
+  --ui-space-xs: 4px;
+  --ui-space-sm: 8px;
+  --ui-space-md: 14px;
+  --ui-space-lg: 20px;
+  --ui-space-xl: 28px;
+
+  /* 둥글기 */
+  --ui-radius-xs: 2px;
+  --ui-radius-sm: 3px;
+  --ui-radius-md: 4px;
+  --ui-radius-lg: 5px;
+  --ui-radius-card: 6px;
+  --ui-radius-pill: 4px;
+
+  /* 그림자 — 블루 기운 */
+  --ui-shadow-card: 0 1px 3px rgba(28, 40, 56, 0.06), 0 6px 16px rgba(49, 130, 246, 0.1);
+  --ui-shadow-float: 0 4px 18px rgba(49, 130, 246, 0.14);
+
+  /* 레이아웃 */
+  --ui-max-width: 1040px;
+  --ui-container-pad: 16px;
+}
+
+body.ui-dark {
+  --ui-border-width: 0.5px;
+  --ui-bg: #141a16;
+  --ui-bg-card: #1c2620;
+  --ui-bg-sec: #243028;
+  --ui-bg-ter: #2e3d32;
+  --ui-text: #e8f0ea;
+  --ui-text-sec: #c4d0c8;
+  --ui-text-ter: #9eb0a4;
+  --ui-border: #354539;
+  --ui-border-hover: #455a4a;
+  --ui-accent: #8eb9ff;
+  --ui-accent-hover: #a8caff;
+  --ui-accent-bg: rgba(107, 168, 255, 0.16);
+  --ui-accent-text: #b8d4ff;
+  --ui-on-accent: #142018;
+  --ui-highlight: #e6c66a;
+  --ui-highlight-bg: rgba(230, 198, 106, 0.16);
+  --ui-highlight-text: #f5e6b8;
+  --ui-highlight-border: rgba(230, 198, 106, 0.45);
+  --ui-up-border: rgba(248, 113, 113, 0.4);
+  --ui-down-border: rgba(96, 165, 250, 0.4);
+  --ui-accent-border: rgba(0, 0, 0, 0.45);
+  --ui-text-outline: 0.35px rgba(0, 0, 0, 0.55);
+  --ui-on-accent-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 0 1px rgba(0, 0, 0, 0.35);
+  --ui-up: #f87171;
+  --ui-up-bg: rgba(248, 113, 113, 0.14);
+  --ui-up-text: #fca5a5;
+  --ui-down: #60a5fa;
+  --ui-down-bg: rgba(96, 165, 250, 0.14);
+  --ui-down-text: #93c5fd;
+  --ui-warn: #ef5350;
+  --ui-warn-text: #ff8a80;
+  --ui-warn-bg: rgba(255, 152, 0, 0.18);
+  --ui-warn-border: rgba(0, 0, 0, 0.4);
+  --ui-live: #ef5350;
+  --ui-live-text: #ffffff;
+  --ui-btn-sec: #243028;
+  --ui-btn-sec-text: #a8b8aa;
+  --ui-btn-sec-border: #455a4a;
+  --ui-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.25);
+}

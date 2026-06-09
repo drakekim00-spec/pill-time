@@ -1,0 +1,10 @@
+{
+  "name": "복약 알림",
+  "short_name": "복약",
+  "description": "약 먹을 시간 알림과 체크",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f0f3f7",
+  "theme_color": "#6ba8ff",
+  "lang": "ko"
+}

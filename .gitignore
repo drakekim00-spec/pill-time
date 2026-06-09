@@ -1,0 +1,4 @@
+miniapp/node_modules/
+miniapp/dist/
+.DS_Store
+Thumbs.db

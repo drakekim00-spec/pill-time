@@ -1,0 +1,23 @@
+복약 알림 — 앱인토스에 올리기 (순서)
+======================================
+
+[준비]
+  1. 앱인토스 개발자 콘솔 계정
+  2. 앱 등록 → appName(영문 kebab) · displayName(한글) · 아이콘
+  3. granite.config.ts 의 appName · displayName 과 똑같이 맞추기
+
+[로컬]
+  시작-미니앱.bat        → granite dev (5173)
+  빌드-미니앱.bat        → new-miniapp.ait
+
+[구조]
+  화면 (index.html 등)  → 프로젝트 루트
+  앱인토스 빌드         → miniapp/  (.ait 만드는 곳)
+  API (나중에)          → backend/  (Render)
+
+[콘솔 업로드]
+  miniapp/new-miniapp.ait (또는 빌드 결과 .ait)
+
+[참고 문서]
+  c:\- App\AI학습용 - 앱인토스UI\앱인토스UI-최종-학습용.md
+  c:\- App\AI학습용 - 앱인토스\llms-전체문서.txt

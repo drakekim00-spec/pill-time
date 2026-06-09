@@ -1,0 +1,525 @@
+/* 복약 알림 — 앱 전용 (앱인토스UI 위) */
+
+.pr-header {
+  margin-bottom: 4px;
+}
+
+.pr-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pr-premium-btn {
+  flex-shrink: 0;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #fff;
+  background: linear-gradient(135deg, #ffb347, #ff8c00);
+  box-shadow: 0 2px 8px rgba(255, 140, 0, 0.35);
+  cursor: pointer;
+}
+
+.pr-time-add-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pr-premium-btn:active {
+  transform: scale(0.97);
+}
+
+.pr-premium-btn.is-owned {
+  color: #1a7f4b;
+  background: #dcf5e8;
+  box-shadow: none;
+  border: 0.5px solid #86d4a8;
+  cursor: default;
+}
+
+.pr-free-hint {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--ui-radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #c45d00;
+  background: #fff8f0;
+  border: 0.5px solid #f0c89a;
+}
+
+.pr-free-hint.is-limit {
+  color: #e5484d;
+  background: #fff5f5;
+  border-color: #f5b5b8;
+}
+
+.pr-add-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pr-premium-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pr-premium-modal[hidden] {
+  display: none !important;
+}
+
+.pr-premium-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.pr-premium-modal__panel {
+  position: relative;
+  width: min(100%, 360px);
+  padding: 22px 18px 18px;
+  border-radius: var(--ui-radius-lg, 16px);
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
+}
+
+.pr-premium-modal__title {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.pr-premium-modal__list {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ui-text-sec);
+}
+
+.pr-premium-modal__note {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ui-text-ter, #8b95a5);
+}
+
+.pr-premium-modal__buy,
+.pr-premium-modal__close {
+  width: 100%;
+  border-radius: var(--ui-radius-md);
+}
+
+.pr-premium-modal__buy {
+  margin-bottom: 8px;
+}
+
+.pr-date {
+  margin: 6px 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ui-text-sec);
+}
+
+.pr-progress-wrap {
+  margin-bottom: 4px;
+}
+
+.pr-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ui-border, #e2e8f0);
+  overflow: hidden;
+}
+
+.pr-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6ba8ff, #0050ff);
+  transition: width 0.25s ease;
+}
+
+.pr-progress-text {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ui-accent-text, #226ed2);
+}
+
+.pr-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.pr-section-head .ui-tag {
+  flex-shrink: 0;
+  font-size: 15px;
+  padding: 7px 11px;
+  margin: 0;
+}
+
+.pr-section-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.pr-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.pr-label-row .ui-label {
+  margin: 0;
+}
+
+.pr-time-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-top: 6px;
+}
+
+.pr-time-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.pr-time-add-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.pr-time-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pr-time-chips:empty {
+  display: none;
+}
+
+.pr-time-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-accent-bg, #e8f3ff);
+  color: var(--ui-accent-text, #226ed2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pr-time-chip button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.pr-add-btn {
+  width: 100%;
+  margin-top: 14px;
+  border-radius: var(--ui-radius-md);
+}
+
+.pr-status {
+  min-height: 0;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ui-text-sec);
+  line-height: 0;
+}
+
+.pr-status:not(:empty) {
+  margin: 10px 0 0;
+  line-height: 1.4;
+}
+
+.pr-status.is-error {
+  color: #e5484d;
+}
+
+.pr-empty {
+  margin: 0;
+  padding: 16px 0 4px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ui-text-sec);
+  line-height: 1.55;
+}
+
+.pr-empty[hidden],
+.pr-dose-list:not(:empty) + .pr-empty {
+  display: none;
+}
+
+.pr-dose-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pr-dose-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.pr-dose-row .pr-dose-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.pr-dose-del {
+  flex-shrink: 0;
+  align-self: center;
+  min-width: 52px;
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--ui-radius-md);
+  color: #c45d00;
+  background: #fff8f0;
+  border: 0.5px solid #f0c89a;
+}
+
+.pr-dose-del:active {
+  transform: scale(0.97);
+}
+
+.pr-dose-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 12px;
+  border: 0.5px solid var(--ui-border, #d1d9e6);
+  border-radius: var(--ui-radius-md);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pr-dose-item:active {
+  transform: scale(0.99);
+}
+
+.pr-dose-item.is-taken {
+  background: #f0faf4;
+  border-color: #86d4a8;
+}
+
+.pr-dose-item.is-overdue:not(.is-taken) {
+  background: #fff8f0;
+  border-color: #f5c98a;
+}
+
+.pr-dose-check {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--ui-accent, #6ba8ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: transparent;
+  transition: all 0.15s ease;
+}
+
+.pr-dose-item.is-taken .pr-dose-check {
+  background: #22a06b;
+  border-color: #22a06b;
+  color: #fff;
+}
+
+.pr-dose-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.pr-dose-time {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.pr-dose-name {
+  margin-top: 2px;
+  font-size: 14px;
+  color: var(--ui-text-sec);
+}
+
+.pr-dose-item.is-taken .pr-dose-time,
+.pr-dose-item.is-taken .pr-dose-name {
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
+.pr-dose-badge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e8f3ff;
+  color: #226ed2;
+}
+
+.pr-dose-item.is-taken .pr-dose-badge {
+  background: #dcf5e8;
+  color: #1a7f4b;
+}
+
+.pr-dose-item.is-overdue:not(.is-taken) .pr-dose-badge {
+  background: #fff0e0;
+  color: #c45d00;
+}
+
+.pr-med-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pr-med-item {
+  padding: 12px;
+  border: 0.5px solid var(--ui-border, #d1d9e6);
+  border-radius: var(--ui-radius-md);
+  background: #fafbfd;
+}
+
+.pr-med-name {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.pr-med-times {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--ui-text-sec);
+  line-height: 1.5;
+}
+
+.pr-med-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pr-med-actions .ui-btn {
+  flex: 1;
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.pr-notify-card {
+  border-color: #6ba8ff;
+  background: linear-gradient(180deg, #f5f9ff 0%, #fff 100%);
+}
+
+.pr-notify-lead {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.pr-notify-btn {
+  width: 100%;
+  border-radius: var(--ui-radius-md);
+}
+
+.pr-notify-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--ui-text-sec);
+  line-height: 1.45;
+}
+
+.pr-notify-hint:empty {
+  display: none;
+}
+
+/* [앱인토스 배너광고 교체 지점] 카드 사이 2곳 */
+.pr-ad-banner {
+  margin: 0 0 var(--ui-space-lg, 18px);
+  clear: both;
+}
+
+.pr-header + .pr-notify-card[hidden] + .pr-ad-banner,
+.pr-notify-card + .pr-ad-banner {
+  margin-top: var(--ui-space-sm, 10px);
+}
+
+.ui-card + .pr-ad-banner {
+  margin-top: 0;
+}
+
+.pr-ad-banner__slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border-radius: var(--ui-radius-md);
+  border: 1px dashed rgba(107, 168, 255, 0.55);
+  background: linear-gradient(180deg, rgba(107, 168, 255, 0.12) 0%, rgba(240, 243, 247, 0.9) 100%);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.pr-ad-banner__badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--ui-text-ter);
+}
+
+.pr-ad-banner__placeholder {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ui-text-sec);
+}
+
+.pr-ad-banner[hidden] {
+  display: none !important;
+}

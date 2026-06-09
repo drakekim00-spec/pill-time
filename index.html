@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f0f3f7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="복약 알림">
+  <title>복약 알림</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="ui/tokens.css">
+  <link rel="stylesheet" href="ui/components.css">
+  <link rel="stylesheet" href="app.css?v=6">
+  <script src="ui/ui-help.js" defer></script>
+  <script src="app.js?v=8" defer></script>
+</head>
+<body class="ui-body pr-body">
+  <div class="ui-container">
+    <header class="pr-header">
+      <div class="pr-header-top">
+        <div class="ui-brand">복약 <span class="ui-brand-accent">알림</span></div>
+        <button type="button" class="pr-premium-btn" id="prPremiumBtn">월 구독 2,200원</button>
+      </div>
+      <p class="pr-date" id="prTodayLabel">—</p>
+      <div class="pr-progress-wrap">
+        <div class="pr-progress-bar" aria-hidden="true">
+          <div class="pr-progress-fill" id="prProgressFill"></div>
+        </div>
+        <p class="pr-progress-text" id="prProgressText">오늘 0 / 0</p>
+      </div>
+    </header>
+
+    <section class="ui-card pr-notify-card" id="prNotifyCard" hidden>
+      <p class="pr-notify-lead">정해진 시간에 알림을 받으려면 허용이 필요합니다.</p>
+      <button type="button" class="ui-btn ui-btn-primary pr-notify-btn" id="prNotifyBtn">알림 켜기</button>
+      <p class="pr-notify-hint" id="prNotifyHint"></p>
+    </section>
+
+    <!-- [앱인토스 배너광고 교체 지점] 알림 카드 ↔ 오늘 먹을 약 -->
+    <div class="pr-ad-banner" id="prAdBannerTop" role="complementary" aria-label="광고">
+      <div class="pr-ad-banner__slot" id="prAdBannerTopSlot">
+        <span class="pr-ad-banner__badge">AD</span>
+        <p class="pr-ad-banner__placeholder">앱인토스 배너 광고</p>
+      </div>
+    </div>
+
+    <section class="ui-card">
+      <div class="pr-section-head">
+        <span class="ui-tag ui-tag--accent">오늘</span>
+        <span class="ui-title-with-help">
+          <span class="pr-section-title">먹을 약</span>
+          <span class="ui-help">
+            <button type="button" class="ui-help-btn" aria-label="오늘 복약 설명" aria-expanded="false">?</button>
+            <div class="ui-help-popover" role="tooltip">
+              <p>등록한 시간에 맞춰 목록이 나옵니다.</p>
+              <p>무료는 약을 최대 2개까지만 등록할 수 있어요.</p>
+              <p>무료는 약 1개당 시간을 최대 3개까지만 넣을 수 있어요.</p>
+              <p>먹었으면 줄을 눌러 체크하세요.</p>
+              <p>삭제는 오른쪽 [삭제] 버튼을 누르세요.</p>
+              <p>자정이 지나면 오늘 체크는 새로 시작됩니다.</p>
+            </div>
+          </span>
+        </span>
+      </div>
+      <ul class="pr-dose-list" id="prTodayList"></ul>
+      <p class="pr-empty" id="prTodayEmpty">등록된 약이 없습니다. 아래에서 추가하세요.</p>
+    </section>
+
+    <!-- [앱인토스 배너광고 교체 지점] 오늘 먹을 약 ↔ 약 등록 -->
+    <div class="pr-ad-banner" id="prAdBannerMid" role="complementary" aria-label="광고">
+      <div class="pr-ad-banner__slot" id="prAdBannerMidSlot">
+        <span class="pr-ad-banner__badge">AD</span>
+        <p class="pr-ad-banner__placeholder">앱인토스 배너 광고</p>
+      </div>
+    </div>
+
+    <section class="ui-card">
+      <div class="pr-section-head">
+        <span class="ui-tag">추가</span>
+        <span class="pr-section-title">약 등록</span>
+      </div>
+      <label class="ui-label" for="prMedName">약 이름</label>
+      <input class="ui-input" id="prMedName" type="text" maxlength="40" placeholder="예: 혈압약" autocomplete="off">
+      <div class="pr-label-row">
+        <label class="ui-label" for="prMedTime">먹을 시간</label>
+        <span class="ui-help">
+          <button type="button" class="ui-help-btn" aria-label="시간 설명" aria-expanded="false">?</button>
+          <div class="ui-help-popover" role="tooltip">
+            <p>하루에 여러 번 먹으면 시간을 하나씩 추가하세요.</p>
+            <p>무료는 약 1개당 시간 최대 3개입니다.</p>
+            <p>예: 아침 08:00, 저녁 20:00</p>
+          </div>
+        </span>
+      </div>
+      <div class="pr-time-row">
+        <input class="ui-input pr-time-input" id="prMedTime" type="time" value="08:00">
+        <button type="button" class="ui-btn pr-time-add-btn" id="prTimeAddBtn">시간 추가</button>
+      </div>
+      <ul class="pr-time-chips" id="prTimeChips"></ul>
+      <p class="pr-free-hint" id="prFreeHint" hidden>무료는 약 최대 2개 · 약당 시간 최대 3개</p>
+      <button type="button" class="ui-btn ui-btn-primary pr-add-btn" id="prAddMedBtn">약 등록하기</button>
+      <p class="pr-status" id="prStatus" aria-live="polite"></p>
+    </section>
+
+    <section class="ui-card" id="prMedsCard" hidden>
+      <div class="pr-section-head">
+        <span class="ui-tag">관리</span>
+        <span class="pr-section-title">등록된 약</span>
+      </div>
+      <ul class="pr-med-list" id="prMedList"></ul>
+    </section>
+
+    <footer class="ui-footer">
+      <div class="ui-disclaimer" role="note">
+        <strong>⚠️ 참고용 안내</strong><br>
+        본 앱은 <b>복약 알림·기록용</b>입니다.<br>
+        의료·투약 지시를 <b>대신하지 않습니다</b>.<br>
+        알림은 기기·브라우저 설정에 따라 달라질 수 있습니다.<br>
+        <b>투약 여부·용량은 반드시 본인·의료진과 확인</b>하세요.
+      </div>
+      <p class="ui-footer-meta">복약 알림 · 업데이트 2026.06.04</p>
+    </footer>
+  </div>
+
+  <div class="pr-premium-modal" id="prPremiumModal" hidden>
+    <div class="pr-premium-modal__backdrop" id="prPremiumBackdrop"></div>
+    <div class="pr-premium-modal__panel" role="dialog" aria-labelledby="prPremiumTitle" aria-modal="true">
+      <h2 class="pr-premium-modal__title" id="prPremiumTitle">월 구독</h2>
+      <ul class="pr-premium-modal__list">
+        <li>약 <strong>무제한</strong> 등록</li>
+        <li>배너 광고 <strong>없음</strong></li>
+      </ul>
+      <p class="pr-premium-modal__note" id="prPremiumNote">앱인토스 결제 연동 전에는 아래 버튼으로 확인할 수 있어요.</p>
+      <button type="button" class="ui-btn ui-btn-primary pr-premium-modal__buy" id="prPremiumBuyBtn">월 구독 2,200원</button>
+      <button type="button" class="ui-btn pr-premium-modal__close" id="prPremiumCloseBtn">닫기</button>
+    </div>
+  </div>
+</body>
+</html>

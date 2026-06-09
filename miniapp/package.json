@@ -1,0 +1,18 @@
+{
+  "name": "pill-reminder-miniapp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "granite dev",
+    "build": "ait build && node scripts/copy-legacy-assets.mjs",
+    "build:web": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "^2.6.1"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  }
+}
