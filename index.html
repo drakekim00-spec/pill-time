@@ -11,9 +11,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="ui/tokens.css">
   <link rel="stylesheet" href="ui/components.css">
-  <link rel="stylesheet" href="app.css?v=6">
+  <link rel="stylesheet" href="app.css?v=7">
   <script src="ui/ui-help.js" defer></script>
-  <script src="app.js?v=8" defer></script>
+  <script src="app.js?v=9" defer></script>
 </head>
 <body class="ui-body pr-body">
   <div class="ui-container">
@@ -32,7 +32,18 @@
     </header>
 
     <section class="ui-card pr-notify-card" id="prNotifyCard" hidden>
-      <p class="pr-notify-lead">정해진 시간에 알림을 받으려면 허용이 필요합니다.</p>
+      <p class="pr-notify-lead">
+        정해진 시간에 알림을 받으려면 허용이 필요합니다.
+        <span class="ui-help">
+          <button type="button" class="ui-help-btn" aria-label="알림 허용 안내" aria-expanded="false">?</button>
+          <div class="ui-help-popover" role="tooltip">
+            <p><strong>알아두면 좋은 점</strong></p>
+            <p>「알림 켜기」를 허용하면 앱을 닫아도 정해진 시간에 알려 드려요.</p>
+            <p>폰 절전 모드나 알림 차단이 켜져 있으면 안 올 수 있어요.</p>
+            <p>토스 미니앱에서는 토스 알림도 허용해 두는 게 좋아요.</p>
+          </div>
+        </span>
+      </p>
       <button type="button" class="ui-btn ui-btn-primary pr-notify-btn" id="prNotifyBtn">알림 켜기</button>
       <p class="pr-notify-hint" id="prNotifyHint"></p>
     </section>
@@ -119,7 +130,7 @@
         알림은 기기·브라우저 설정에 따라 달라질 수 있습니다.<br>
         <b>투약 여부·용량은 반드시 본인·의료진과 확인</b>하세요.
       </div>
-      <p class="ui-footer-meta">복약 알림 · 업데이트 2026.06.04</p>
+      <p class="ui-footer-meta">복약 알림 · 업데이트 2026.06.09</p>
     </footer>
   </div>
 

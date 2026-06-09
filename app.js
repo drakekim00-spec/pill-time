@@ -6,7 +6,8 @@
   var FREE_MED_LIMIT = 2;
   var FREE_TIME_LIMIT = 3;
   var SUBSCRIBE_LABEL = "월 구독 2,200원";
-  var TICK_MS = 30000;
+  var TICK_MS = 15000;
+  var swRegistration = null;
 
   var state = {
     medicines: [],
@@ -209,6 +210,71 @@
         notified: state.notified,
       }),
     );
+    syncScheduleToWorker();
+  }
+
+  function getWorkerState() {
+    return {
+      medicines: state.medicines,
+      taken: state.taken,
+      notified: state.notified,
+    };
+  }
+
+  function postToWorker(message) {
+    if (!("serviceWorker" in navigator)) return;
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage(message);
+    }
+    if (swRegistration && swRegistration.active) {
+      swRegistration.active.postMessage(message);
+    }
+  }
+
+  function registerPeriodicSync() {
+    if (!swRegistration || !swRegistration.periodicSync) return;
+    swRegistration.periodicSync.register("pill-dose-check", { minInterval: 15 * 60 * 1000 }).catch(function () {
+      /* optional */
+    });
+  }
+
+  function registerBackgroundSync() {
+    if (!swRegistration || !swRegistration.sync) return;
+    swRegistration.sync.register("pill-dose-check").catch(function () {
+      /* optional */
+    });
+  }
+
+  function syncScheduleToWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    var payload = { type: "SYNC_STATE", state: getWorkerState() };
+    postToWorker(payload);
+    if (Notification.permission === "granted") {
+      postToWorker({ type: "START_ALARMS" });
+      registerPeriodicSync();
+      registerBackgroundSync();
+    }
+  }
+
+  function applyWorkerPatch(patch) {
+    if (!patch || !patch.dateKey || !patch.notified) return;
+    if (!state.notified[patch.dateKey]) state.notified[patch.dateKey] = {};
+    Object.keys(patch.notified).forEach(function (key) {
+      state.notified[patch.dateKey][key] = patch.notified[key];
+    });
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          medicines: state.medicines,
+          taken: state.taken,
+          notified: state.notified,
+        }),
+      );
+    } catch (_e) {
+      /* ignore */
+    }
+    renderAll();
   }
 
   function ensureDayBuckets() {
@@ -476,7 +542,7 @@
       if (Notification.permission === "denied") {
         hint.textContent = "알림이 꺼져 있어요. 브라우저 설정에서 이 사이트 알림을 허용해 주세요.";
       } else {
-        hint.textContent = "앱을 켜 두면 정해진 시간에 알려 드려요.";
+        hint.textContent = "허용하면 앱을 닫아도 정해진 시간에 알려 드려요.";
       }
     }
   }
@@ -572,7 +638,8 @@
     Notification.requestPermission().then(function () {
       renderNotifyCard();
       if (Notification.permission === "granted") {
-        setStatus("알림을 켰어요. 정해진 시간에 알려 드릴게요.");
+        setStatus("알림을 켰어요. 앱을 닫아도 정해진 시간에 알려 드릴게요.");
+        syncScheduleToWorker();
         tryNotifyDueDoses(true);
       } else {
         setStatus("알림 허용이 필요해요.", true);
@@ -580,18 +647,23 @@
     });
   }
 
-  function showNotification(title, body) {
+  function showNotification(title, body, tag) {
     if (!("Notification" in window) || Notification.permission !== "granted") return;
+    var options = {
+      body: body,
+      tag: tag || "pill-reminder",
+      renotify: true,
+    };
     try {
-      var n = new Notification(title, {
-        body: body,
-        tag: "pill-reminder",
-        renotify: true,
-      });
-      n.onclick = function () {
-        window.focus();
-        n.close();
-      };
+      if (swRegistration && swRegistration.showNotification) {
+        swRegistration.showNotification(title, options);
+      } else {
+        var n = new Notification(title, options);
+        n.onclick = function () {
+          window.focus();
+          n.close();
+        };
+      }
     } catch (_e) {
       /* ignore */
     }
@@ -622,6 +694,7 @@
       showNotification(
         "💊 약 먹을 시간",
         dose.name + " · " + dose.time + (diff > 1 ? " (방금 지남)" : ""),
+        "pill-reminder-" + dose.key,
       );
     });
   }
@@ -635,9 +708,33 @@
   }
 
   function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return Promise.resolve();
+    return navigator.serviceWorker
+      .register("sw.js")
+      .then(function (reg) {
+        swRegistration = reg;
+        if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        return navigator.serviceWorker.ready;
+      })
+      .then(function (reg) {
+        swRegistration = reg;
+        syncScheduleToWorker();
+      })
+      .catch(function () {
+        /* optional */
+      });
+  }
+
+  function bindServiceWorkerMessages() {
     if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("sw.js").catch(function () {
-      /* optional */
+    navigator.serviceWorker.addEventListener("message", function (event) {
+      var data = event.data || {};
+      if (data.type === "STATE_PATCH") applyWorkerPatch(data.patch);
+    });
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") {
+        postToWorker({ type: "CHECK_NOW" });
+      }
     });
   }
 
@@ -672,6 +769,7 @@
       tryNotifyDueDoses(false);
     }, TICK_MS);
 
+    bindServiceWorkerMessages();
     registerServiceWorker();
   });
 })();

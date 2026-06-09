@@ -460,6 +460,11 @@
   line-height: 1.55;
 }
 
+.pr-notify-lead .ui-help {
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
 .pr-notify-btn {
   width: 100%;
   border-radius: var(--ui-radius-md);
