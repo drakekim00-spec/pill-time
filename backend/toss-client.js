@@ -1,15 +1,38 @@
 import fs from "fs";
 import https from "https";
+import path from "path";
+import { fileURLToPath } from "url";
 
 var API_BASE = (process.env.TOSS_API_BASE || "https://apps-in-toss-api.toss.im").replace(/\/$/, "");
+var BACKEND_ROOT = path.dirname(fileURLToPath(import.meta.url));
+var PROJECT_ROOT = path.join(BACKEND_ROOT, "..");
 
-function readPem(envValue, pathEnv) {
+function firstExisting(paths) {
+  for (var i = 0; i < paths.length; i++) {
+    if (paths[i] && fs.existsSync(paths[i])) return paths[i];
+  }
+  return "";
+}
+
+var DEFAULT_CERT = firstExisting([
+  path.join(BACKEND_ROOT, "certs", "약먹을시간_public.crt"),
+  path.join(PROJECT_ROOT, "mTLS", "약먹을시간_public.crt"),
+]);
+var DEFAULT_KEY = firstExisting([
+  path.join(BACKEND_ROOT, "certs", "약먹을시간_private.key"),
+  path.join(PROJECT_ROOT, "mTLS", "약먹을시간_private.key"),
+]);
+
+function readPem(envValue, pathEnv, defaultFilePath) {
   if (envValue && String(envValue).trim()) {
     return String(envValue).replace(/\\n/g, "\n");
   }
   var filePath = process.env[pathEnv];
   if (filePath && fs.existsSync(filePath)) {
     return fs.readFileSync(filePath, "utf8");
+  }
+  if (defaultFilePath && fs.existsSync(defaultFilePath)) {
+    return fs.readFileSync(defaultFilePath, "utf8");
   }
   return "";
 }
@@ -18,8 +41,8 @@ var cachedAgent = null;
 
 function getAgent() {
   if (cachedAgent) return cachedAgent;
-  var cert = readPem(process.env.TOSS_MTLS_CERT, "TOSS_MTLS_CERT_PATH");
-  var key = readPem(process.env.TOSS_MTLS_KEY, "TOSS_MTLS_KEY_PATH");
+  var cert = readPem(process.env.TOSS_MTLS_CERT, "TOSS_MTLS_CERT_PATH", DEFAULT_CERT);
+  var key = readPem(process.env.TOSS_MTLS_KEY, "TOSS_MTLS_KEY_PATH", DEFAULT_KEY);
   if (!cert || !key) return null;
   cachedAgent = new https.Agent({
     cert: cert,

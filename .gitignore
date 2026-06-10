@@ -4,5 +4,7 @@ backend/node_modules/
 backend/data/
 backend/.env
 miniapp/.env
+mTLS/*.key
+mTLS/*.pem
 .DS_Store
 Thumbs.db

@@ -31,7 +31,7 @@
 
   ② 이 폴더에서 (PowerShell):
 
-     cd "c:\- App\- 완성\복약 알림 (26.06.05)"
+     cd "c:\- App\- 완성\약먹을시간 (26.06.05)"
      git add .
      git commit -m "서버 추가"
      git push
@@ -72,8 +72,9 @@
      NODE_VERSION            22
      TOSS_TEMPLATE_SET_CODE  pill-time-templateSetCode
      TOSS_API_BASE           https://apps-in-toss-api.toss.im
-     TOSS_MTLS_CERT          (콘솔 → mTLS 인증서 → PEM 내용 통째로)
-     TOSS_MTLS_KEY           (콘솔 → mTLS 키 → PEM 내용 통째로)
+     TOSS_MTLS_CERT          mTLS/약먹을시간_public.crt 내용 통째
+     TOSS_MTLS_KEY           mTLS/약먹을시간_private.key 내용 통째
+                             ※ backend 에서 npm run mtls:print 하면 복사용으로 나옴
      TZ                      Asia/Seoul
 
      ※ 푸시 API는 mTLS 없으면 안 됨 (mtls: false 면 푸시 불가)

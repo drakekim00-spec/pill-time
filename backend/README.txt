@@ -3,7 +3,8 @@ pill-time-api (Render)
 
 로컬
   cd backend
-  copy .env.example .env   (mTLS PEM 붙여넣기)
+  npm start   (mTLS는 ../mTLS 폴더 자동 로드)
+  Render용: npm run mtls:print
   npm install
   npm start
   → http://localhost:8789/api/health
