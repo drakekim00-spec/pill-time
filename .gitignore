@@ -1,4 +1,8 @@
 miniapp/node_modules/
 miniapp/dist/
+backend/node_modules/
+backend/data/
+backend/.env
+miniapp/.env
 .DS_Store
 Thumbs.db

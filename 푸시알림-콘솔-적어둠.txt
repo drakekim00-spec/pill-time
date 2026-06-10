@@ -1,0 +1,77 @@
+약먹을시간 — 푸시(기능성 메시지) 콘솔에 적어 둔 값
+================================================
+(2026.06.11 기준 · 나중에 바뀌면 이 파일만 고치면 됨)
+
+
+■ 콘솔 들어가는 길
+  앱인토스 콘솔 → 워크스페이스 → 미니앱 pill-time(약먹을시간)
+  → 왼쪽 「스마트 발송」 → 기능성 캠페인 만들기/수정
+
+
+■ 화면에 그대로 적을 것
+────────────────────────────────────────
+  [기본 정보]
+  캠페인 제목     복약 알림
+  발송 방법       ● 직접 API로 발송하기   (이거 선택)
+
+  [소재]
+  제목            복약 알림
+  내용            토스에서 약 먹을 시간이에요.
+  이동 URL        intoss://pill-time
+                  ※ 끝에 공백·슬래시(/) 넣지 말 것
+                  ※ QR 테스트만 할 때는 콘솔 안내의
+                    intoss-private://pill-time 일 수 있음
+
+  [발송 코드]  ← 서버(API)에서 쓰는 templateSetCode
+  pill-time-templateSetCode
+
+  [알림동의문]
+  약먹을시간 복약 알림 동의   (드롭다운에서 선택)
+────────────────────────────────────────
+
+
+■ 버튼 누르는 순서
+  1. 위 내용 다 채우기
+  2. 맨 아래 「저장하기」 누르기
+  3. 검수(문구) 승인될 때까지 기다리기 (영업일 2~3일)
+  4. 승인된 뒤에만 「테스트 발송하기」 눌러 보기
+     ※ 검수 전에는 테스트 발송 안 될 수 있음
+
+
+■ 앱·서버에 나중에 넣을 코드 (역할이 다름)
+────────────────────────────────────────
+  발송 코드 (서버)     pill-time-templateSetCode
+                       → Render 서버가 토스 API 보낼 때
+
+  동의문 코드 (앱)     (콘솔 알림동의문 탭에서 확인)
+                       → index.html 의 notifyAgreementTemplateCode
+                       → 아직 화면에 코드 안 보이면 토스 문의
+
+  앱 영문 이름         pill-time
+  표시 이름            약먹을시간
+
+  최근 ait deploymentId (테스트 발송 API용, ait 올릴 때마다 바뀜)
+  019eb130-57e3-786f-9df8-aed142f2e26d
+  ※ 새로 miniapp 빌드·업로드하면 콘솔 「앱 출시」에서 최신 값 확인
+────────────────────────────────────────
+
+
+■ 토스 API (서버 만들 때)
+  주소     https://apps-in-toss-api.toss.im
+  본발송   POST /api-partner/v1/apps-in-toss/messenger/send-message
+  테스트   POST /api-partner/v1/apps-in-toss/messenger/send-test-message
+  헤더     x-toss-user-key: (사용자 userKey)
+  body     templateSetCode: pill-time-templateSetCode
+           context: {}   (변수 없으면 빈 객체)
+
+
+■ 아직 안 된 것
+  □ 문구 검수 승인
+  □ backend 서버 (Render) — 약·시간 저장 + 정해진 시간에 API 호출
+  □ 앱에서 userKey 받아서 서버로 보내기
+  □ 앱에서 알림 동의문 코드 넣기 (코드 확인되면)
+
+
+■ 참고 문서
+  https://developers-apps-in-toss.toss.im/smart-message/intro.html
+  https://developers-apps-in-toss.toss.im/smart-message/develop.html

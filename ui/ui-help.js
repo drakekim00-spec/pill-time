@@ -1,8 +1,7 @@
 /**
  * 나만의 UI — 물음표(?) 도움말 동작
- * components.css 다음에 연결하세요.
  */
-(function () {
+export function initUiHelp() {
   function closeAll(except) {
     document.querySelectorAll(".ui-help-popover.is-open").forEach(function (pop) {
       if (pop === except) return;
@@ -29,6 +28,8 @@
     var btn = helpEl.querySelector(".ui-help-btn");
     var pop = helpEl.querySelector(".ui-help-popover");
     if (!btn || !pop) return;
+    if (btn.dataset.uiHelpBound === "1") return;
+    btn.dataset.uiHelpBound = "1";
 
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
@@ -40,16 +41,18 @@
     });
   });
 
-  document.addEventListener(
-    "click",
-    function (e) {
-      if (e.target.closest(".ui-help")) return;
-      closeAll(null);
-    },
-    true,
-  );
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeAll(null);
-  });
-})();
+  if (!document.documentElement.dataset.uiHelpDocBound) {
+    document.documentElement.dataset.uiHelpDocBound = "1";
+    document.addEventListener(
+      "click",
+      function (e) {
+        if (e.target.closest(".ui-help")) return;
+        closeAll(null);
+      },
+      true,
+    );
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeAll(null);
+    });
+  }
+}

@@ -11,17 +11,16 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="ui/tokens.css">
   <link rel="stylesheet" href="ui/components.css">
-  <link rel="stylesheet" href="app.css?v=11">
+  <link rel="stylesheet" href="app.css?v=12">
   <script>
     window.PR_CONFIG = window.PR_CONFIG || {
       iapSkuPremium: "sub.uf9.mq6entjm.26cfc803f2",
       bannerAdGroupIdTop: "ait.v2.live.100714c17799446f",
       bannerAdGroupIdMid: "ait.v2.live.be9f36b5ccd746af",
+      notifyAgreementTemplateCode: "",
     };
   </script>
   <script type="module" src="pr-bootstrap.js"></script>
-  <script src="ui/ui-help.js?v=2" defer></script>
-  <script src="app.js?v=12" defer></script>
 </head>
 <body class="ui-body pr-body">
   <div class="ui-container">
@@ -40,9 +39,12 @@
     </header>
 
     <section class="ui-card pr-notify-card" id="prNotifyCard">
-      <div class="pr-notify-lead ui-title-with-help">
-        <span class="pr-notify-lead-text">정해진 시간에 알림을 받으려면 허용이 필요합니다.</span>
-        <span class="ui-help pr-notify-help">
+      <div class="pr-notify-lead">
+        <p class="pr-notify-lead-text">
+          정해진 시간에 알림을 받으려면<br>
+          <span class="pr-notify-lead-tail ui-title-with-help">
+            <span>알림 허용이 필요합니다.</span>
+            <span class="ui-help pr-notify-help">
           <button type="button" class="ui-help-btn" aria-label="알림 허용 안내" aria-expanded="false">?</button>
           <div class="ui-help-popover" role="tooltip">
             <p><strong>알아두면 좋은 점</strong></p>
@@ -50,7 +52,9 @@
             <p>폰 절전 모드나 알림 차단이 켜져 있으면 안 올 수 있어요.</p>
             <p>토스 미니앱에서는 토스 알림도 허용해 두는 게 좋아요.</p>
           </div>
-        </span>
+            </span>
+          </span>
+        </p>
       </div>
       <button type="button" class="ui-btn ui-btn-primary pr-notify-btn" id="prNotifyBtn">알림 켜기</button>
       <p class="pr-notify-hint" id="prNotifyHint"></p>
@@ -138,7 +142,7 @@
         알림은 기기·브라우저 설정에 따라 달라질 수 있습니다.<br>
         <b>투약 여부·용량은 반드시 본인·의료진과 확인</b>하세요.
       </div>
-      <p class="ui-footer-meta">복약 알림 · 업데이트 2026.06.09</p>
+      <p class="ui-footer-meta">복약 알림 · 업데이트 2026.06.11</p>
     </footer>
   </div>
 

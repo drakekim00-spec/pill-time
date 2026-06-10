@@ -24,7 +24,7 @@ function copyLegacyWebAssets(): Plugin {
       const outWeb = path.resolve(miniappDir, "dist", "web");
       if (!fs.existsSync(outWeb)) return;
 
-      for (const file of ["app.js", "app.css"]) {
+      for (const file of ["app.js", "app.css", "sw.js", "manifest.json", "brand-icon.png"]) {
         const src = path.join(webRoot, file);
         if (fs.existsSync(src)) {
           fs.copyFileSync(src, path.join(outWeb, file));
@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
   loadEnv(mode, miniappDir, "VITE_");
 
   return {
+    base: "./",
     root: webRoot,
     envDir: miniappDir,
     publicDir: false,

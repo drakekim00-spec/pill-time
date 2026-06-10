@@ -1,5 +1,18 @@
-backend — API 자리 (아직 비어 있음)
-====================================
+pill-time-api (Render)
+======================
 
-나중에 Render 등에 올릴 서버 코드를 여기에 둡니다.
-지금은 화면만 로컬에서 미리보기하면 됩니다.
+로컬
+  cd backend
+  copy .env.example .env   (mTLS PEM 붙여넣기)
+  npm install
+  npm start
+  → http://localhost:8789/api/health
+
+Render 환경 변수 (필수)
+  TOSS_TEMPLATE_SET_CODE = pill-time-templateSetCode
+  TOSS_API_BASE          = https://apps-in-toss-api.toss.im
+  TOSS_MTLS_CERT         = (콘솔 mTLS 인증서 PEM)
+  TOSS_MTLS_KEY          = (콘솔 mTLS 키 PEM)
+  TZ                     = Asia/Seoul
+
+mTLS 없으면 푸시 API 호출 불가 (mtls: false)

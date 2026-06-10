@@ -1,0 +1,145 @@
+약먹을시간 — Render에 서버 올리기 (쉬운 순서)
+==============================================
+(돈 되는 키워드 깃허브-렌더-올리기.txt 와 같은 방식)
+
+
+[먼저 알 것]
+
+  GitHub  = 코드 창고 (백업)
+  Render  = 24시간 켜 두는 서버 (푸시 보내는 곳)
+  토스    = 화면은 .ait 로 콘솔 업로드 (Render 와 별개)
+
+  ※ 지금 backend/ 는 비어 있음.
+    서버 코드 만든 다음 아래 순서대로 하면 됨.
+
+
+────────────────────────────────────────
+0. 서버가 할 일 (한 줄)
+────────────────────────────────────────
+
+  앱에서 받은 「userKey + 약 + 시간」 저장
+  → 시간 되면 토스 API로 「복약 알림」 푸시 보내기
+  (발송 코드: pill-time-templateSetCode)
+
+
+────────────────────────────────────────
+1. GitHub — 코드 올리기
+────────────────────────────────────────
+
+  ① github.com → 저장소 pill-time (이미 있으면 생략)
+     https://github.com/drakekim00-spec/pill-time
+
+  ② 이 폴더에서 (PowerShell):
+
+     cd "c:\- App\- 완성\복약 알림 (26.06.05)"
+     git add .
+     git commit -m "서버 추가"
+     git push
+
+  ※ .env 는 올라가면 안 됨 (비밀번호·API키)
+
+
+────────────────────────────────────────
+2. Render — 서버 켜기
+────────────────────────────────────────
+
+  ① https://render.com 가입 (GitHub 연동)
+
+  ② New → Web Service
+
+  ③ GitHub에서 pill-time 저장소 연결
+
+  ④ Render 화면 — 그대로 적기
+     (지금 화면 기준. yarn 말고 npm)
+
+     Source Code     drakekim00-spec / pill-time  (이미 연결됨)
+     Name            pill-time-api
+     Language        Node
+     Branch          main
+     Region          Singapore (가까움) 또는 Oregon
+
+     Root Directory  backend
+     Build Command   npm install && npm run build
+     Start Command   npm start
+
+     Instance Type   Free ($0) 로 먼저 해도 됨
+                     (Starter $7 도 됨)
+
+  ⑤ Environment Variables — Add 추가해서 넣기
+
+     NAME                    VALUE
+     ─────────────────────   ─────────────────────────────
+     NODE_VERSION            22
+     TOSS_TEMPLATE_SET_CODE  pill-time-templateSetCode
+     TOSS_API_BASE           https://apps-in-toss-api.toss.im
+     TOSS_MTLS_CERT          (콘솔 → mTLS 인증서 → PEM 내용 통째로)
+     TOSS_MTLS_KEY           (콘솔 → mTLS 키 → PEM 내용 통째로)
+     TZ                      Asia/Seoul
+
+     ※ 푸시 API는 mTLS 없으면 안 됨 (mtls: false 면 푸시 불가)
+
+  ⑥ 맨 아래 「Deploy Web Service」 누르기
+
+  ※ backend/ 에 서버 코드 없으면 배포 실패함.
+    그때는 서버 만든 뒤 git push → Render 가 다시 배포.
+
+  ⑥ Create Web Service → 배포 끝날 때까지 기다리기
+
+  ⑦ 주소 예시 (본인 것으로 바꿈)
+     https://pill-time-api.onrender.com
+
+  ⑧ 확인: 브라우저에서
+     https://본인주소.onrender.com/api/health
+     → ok 나오면 성공 (health 주소는 서버 만들 때 정함)
+
+
+────────────────────────────────────────
+3. 앱(토스)과 Render 연결
+────────────────────────────────────────
+
+  ① miniapp/.env 에 서버 주소 넣기
+     VITE_API_BASE=https://본인주소.onrender.com
+
+  ② miniapp 폴더에서 npm run build
+     → pill-time.ait 새로 만들기
+
+  ③ 토스 콘솔에 .ait 업로드 → QR 테스트
+
+
+────────────────────────────────────────
+4. 한 번에 기억
+────────────────────────────────────────
+
+  | 어디      | 올리는 것              |
+  |-----------|------------------------|
+  | GitHub    | 코드 (비밀 제외)       |
+  | Render    | backend 서버만         |
+  | 토스 콘솔 | pill-time.ait + 푸시설정 |
+
+
+────────────────────────────────────────
+5. 푸시가 실제로 나가려면 (콘솔)
+────────────────────────────────────────
+
+  □ 기능성 메시지 「복약 알림」 저장
+  □ 알림동의문 연결
+  □ 문구 검수 승인
+  □ 앱에서 사용자 알림 동의
+  □ Render 서버 배포 + 앱 연동
+
+  자세한 값 → 푸시알림-콘솔-적어둠.txt
+
+
+────────────────────────────────────────
+6. 자주 묻는 것
+────────────────────────────────────────
+
+  Q. GitHub만 올렸는데 왜 푸시 안 와?
+  A. Render에 서버가 안 떠 있거나, 검수 전이거나,
+     앱이 서버에 약·시간을 안 보냈을 수 있음.
+
+  Q. Render 무료면?
+  A. 잠깐 잠들 수 있음. 알림 서버는 유료 쪽이 나을 수 있음.
+
+  Q. 코드 수정 후?
+  A. git push → Render 가 자동 재배포 (연동 시)

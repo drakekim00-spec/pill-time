@@ -1,3 +1,6 @@
+import { initUiHelp } from "./ui/ui-help.js";
+import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
+
 (function () {
   "use strict";
 
@@ -7,6 +10,9 @@
   var FREE_TIME_LIMIT = 3;
   var SUBSCRIBE_LABEL = "월 구독 2,200원";
   var TICK_MS = 15000;
+  var DUE_WINDOW_MIN = 5;
+  var CATCHUP_MIN = 60;
+  var NOTIFY_ICON = "./brand-icon.png";
   var swRegistration = null;
 
   var state = {
@@ -130,6 +136,23 @@
       var el = $(id);
       if (el) el.hidden = !show;
     });
+    var bridge = window.PR_AIT;
+    if (!show && bridge && bridge.destroyBannerAds) bridge.destroyBannerAds();
+    else if (show) ensureBannerAds();
+  }
+
+  function ensureBannerAds() {
+    if (isPremiumUser()) return;
+    var bridge = window.PR_AIT;
+    if (!bridge || !bridge.initBannerAds) return;
+    bridge.initBannerAds().then(function (result) {
+      if (result && result.ok) return;
+      window.setTimeout(function () {
+        if (window.PR_AIT && window.PR_AIT.initBannerAds) {
+          window.PR_AIT.initBannerAds();
+        }
+      }, 2500);
+    });
   }
 
   function renderPremiumUI() {
@@ -202,15 +225,40 @@
   }
 
   function saveState() {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        medicines: state.medicines,
-        taken: state.taken,
-        notified: state.notified,
-      }),
-    );
-    syncScheduleToWorker();
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          medicines: state.medicines,
+          taken: state.taken,
+          notified: state.notified,
+        }),
+      );
+    } catch (_e) {
+      setStatus("저장이 막혀 있어요. 토스 앱을 다시 열어 주세요.", true);
+    }
+    try {
+      syncScheduleToWorker();
+    } catch (_e) {
+      /* 토스 WebView 등 Notification 없는 환경 */
+    }
+    pushScheduleToServer();
+  }
+
+  function pushScheduleToServer() {
+    if (!hasApiBase()) return;
+    syncScheduleToApi({
+      notifyEnabled: isTossNotifyOn(),
+      medicines: state.medicines,
+    });
+  }
+
+  function ensurePushLogin() {
+    var bridge = window.PR_AIT;
+    if (!hasApiBase() || !bridge || !bridge.loginForPush) {
+      return Promise.resolve({ ok: false, reason: "unsupported" });
+    }
+    return bridge.loginForPush();
   }
 
   function getWorkerState() {
@@ -249,7 +297,7 @@
     if (!("serviceWorker" in navigator)) return;
     var payload = { type: "SYNC_STATE", state: getWorkerState() };
     postToWorker(payload);
-    if (Notification.permission === "granted") {
+    if (hasWebNotify() && Notification.permission === "granted") {
       postToWorker({ type: "START_ALARMS" });
       registerPeriodicSync();
       registerBackgroundSync();
@@ -530,32 +578,34 @@
 
     if (btn) {
       btn.hidden = false;
-      btn.classList.remove("is-on");
       btn.disabled = false;
+      btn.classList.remove("is-on");
       btn.textContent = "알림 켜기";
     }
 
-    if (!("Notification" in window)) {
-      if (hint) hint.textContent = "이 브라우저는 알림을 지원하지 않을 수 있어요.";
-      if (btn) btn.hidden = true;
-      return;
-    }
+    var webGranted = hasWebNotify() && Notification.permission === "granted";
+    var tossOn = isTossNotifyOn();
 
-    if (Notification.permission === "granted") {
+    if (webGranted || tossOn) {
       if (btn) {
-        btn.textContent = "알림 켜짐 ✓";
-        btn.disabled = true;
+        btn.textContent = "알림 켜졌음";
         btn.classList.add("is-on");
       }
-      if (hint) hint.textContent = "알림이 켜져 있어요. 정해진 시간에 알려 드릴게요.";
+      if (hint) {
+        hint.textContent = hasWebNotify()
+          ? "알림이 켜져 있어요. 정해진 시간에 알려 드릴게요."
+          : "알림이 켜져 있어요. 앱을 켜 둔 동안 화면으로 알려 드려요.";
+      }
       return;
     }
 
     if (hint) {
-      if (Notification.permission === "denied") {
-        hint.textContent = "알림이 꺼져 있어요. 브라우저 설정에서 이 사이트 알림을 허용해 주세요.";
+      if (hasWebNotify() && Notification.permission === "denied") {
+        hint.textContent = "알림이 꺼져 있어요. 토스 설정에서 이 앱 알림을 허용해 주세요.";
+      } else if (!hasWebNotify() && hasTossNotifyBridge()) {
+        hint.textContent = "토스 알림 허용이 필요해요. 아래 버튼을 눌러 주세요.";
       } else {
-        hint.textContent = "허용하면 앱을 닫아도 정해진 시간에 알려 드려요.";
+        hint.textContent = "허용하면 정해진 시간에 알려 드려요.";
       }
     }
   }
@@ -640,24 +690,150 @@
     if (nameEl) nameEl.value = "";
     renderTimeChips();
     renderAll();
-    setStatus("「" + name + "」을(를) 등록했어요.");
+    setStatus("「" + name + "」을(를) 등록했어요. 위 「먹을 약」에 추가됐어요.");
+    var todayList = $("prTodayList");
+    if (todayList && todayList.scrollIntoView) {
+      todayList.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }
+
+  var TOSS_NOTIFY_KEY = "pill-reminder-toss-notify";
+
+  function hasWebNotify() {
+    return typeof window.Notification !== "undefined";
+  }
+
+  function hasTossNotifyBridge() {
+    var bridge = window.PR_AIT;
+    return !!(bridge && bridge.requestNotificationAgreement);
+  }
+
+  function hasTossNotifyTemplate() {
+    var cfg = window.PR_CONFIG || {};
+    return !!(cfg.notifyAgreementTemplateCode && String(cfg.notifyAgreementTemplateCode).trim());
+  }
+
+  function isTossNotifyOn() {
+    try {
+      return localStorage.getItem(TOSS_NOTIFY_KEY) === "1";
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function setTossNotifyOn() {
+    try {
+      localStorage.setItem(TOSS_NOTIFY_KEY, "1");
+    } catch (_e) {
+      /* ignore */
+    }
+  }
+
+  function requestTossNotifyAgreement() {
+    if (!hasTossNotifyBridge()) {
+      return Promise.resolve({ ok: false, reason: "unsupported" });
+    }
+    if (!hasTossNotifyTemplate()) {
+      return Promise.resolve({ ok: false, reason: "no_template" });
+    }
+    var bridge = window.PR_AIT;
+    var cfg = window.PR_CONFIG || {};
+    return bridge.requestNotificationAgreement(cfg.notifyAgreementTemplateCode).then(function (result) {
+      if (result && result.ok) setTossNotifyOn();
+      return result || { ok: false };
+    });
+  }
+
+  function showInAppDoseAlert(dose, diff) {
+    var msg =
+      "💊 " +
+      dose.name +
+      " · " +
+      dose.time +
+      (diff > 1 ? " (방금 지남)" : "") +
+      " 먹을 시간이에요.";
+    setStatus(msg);
+    if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+  }
+
+  function afterNotifyEnabled() {
+    try {
+      syncScheduleToWorker();
+    } catch (_e) {
+      /* ignore */
+    }
+    pushScheduleToServer();
+    tryNotifyDueDoses(true, CATCHUP_MIN);
+    renderNotifyCard();
+    if (hasApiBase()) {
+      setStatus("알림을 켰어요. 정해진 시간에 토스로 알려 드릴게요.");
+    } else if (hasWebNotify() && Notification.permission === "granted") {
+      setStatus("알림을 켰어요. 정해진 시간에 알려 드릴게요.");
+    } else if (isTossNotifyOn()) {
+      setStatus("알림을 켰어요. 앱을 켜 둔 동안 화면으로 알려 드릴게요.");
+    } else {
+      setStatus("알림을 켰어요.");
+    }
+    if (navigator.vibrate) navigator.vibrate(80);
   }
 
   function requestNotifyPermission() {
-    if (!("Notification" in window)) {
-      setStatus("이 기기에서는 알림을 쓸 수 없어요.", true);
+    setStatus("알림 설정 중…");
+    if (hasWebNotify() && Notification.permission === "granted") {
+      requestTossNotifyAgreement().finally(function () {
+        setStatus("이미 알림이 켜져 있어요.");
+        renderNotifyCard();
+      });
       return;
     }
-    Notification.requestPermission().then(function () {
-      renderNotifyCard();
-      if (Notification.permission === "granted") {
-        setStatus("알림을 켰어요. 앱을 닫아도 정해진 시간에 알려 드릴게요.");
-        syncScheduleToWorker();
-        tryNotifyDueDoses(true);
-      } else {
-        setStatus("알림 허용이 필요해요.", true);
-      }
-    });
+
+    if (hasWebNotify() && Notification.permission !== "denied") {
+      Notification.requestPermission().then(function () {
+        if (Notification.permission === "granted") {
+          return requestTossNotifyAgreement().then(function () {
+            afterNotifyEnabled();
+          });
+        }
+        if (Notification.permission === "denied") {
+          setStatus("알림이 거부됐어요. 토스 설정에서 알림을 켜 주세요.", true);
+        } else {
+          setStatus("알림 허용이 필요해요.", true);
+        }
+        renderNotifyCard();
+      });
+      return;
+    }
+
+    if (hasTossNotifyBridge()) {
+      ensurePushLogin().then(function (loginResult) {
+        function proceedAgreement() {
+          if (!hasTossNotifyTemplate()) {
+            setTossNotifyOn();
+            afterNotifyEnabled();
+            return;
+          }
+          requestTossNotifyAgreement().then(function (result) {
+            if (result && result.ok) {
+              setTossNotifyOn();
+              afterNotifyEnabled();
+              return;
+            }
+            setStatus("토스 알림 동의가 필요해요.", true);
+            renderNotifyCard();
+          });
+        }
+
+        if (hasApiBase() && (!loginResult || !loginResult.ok)) {
+          setStatus("토스 로그인이 필요해요. 다시 시도해 주세요.", true);
+          renderNotifyCard();
+          return;
+        }
+        proceedAgreement();
+      });
+      return;
+    }
+
+    setStatus("토스 앱에서 열어 주세요. 여기서는 알림을 켤 수 없어요.", true);
   }
 
   function showNotification(title, body, tag) {
@@ -666,6 +842,8 @@
       body: body,
       tag: tag || "pill-reminder",
       renotify: true,
+      icon: NOTIFY_ICON,
+      badge: NOTIFY_ICON,
     };
     try {
       if (swRegistration && swRegistration.showNotification) {
@@ -683,12 +861,14 @@
     if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
   }
 
-  function tryNotifyDueDoses(forceNow) {
-    if (!("Notification" in window) || Notification.permission !== "granted") return;
+  function tryNotifyDueDoses(forceNow, catchUpMin) {
+    if (!isTossNotifyOn() && (!hasWebNotify() || Notification.permission !== "granted")) return;
 
     var dateKey = ensureDayBuckets();
     var doses = getTodayDoses();
     var now = nowMinutes();
+    var pastLimit = catchUpMin != null ? catchUpMin : forceNow ? CATCHUP_MIN : DUE_WINDOW_MIN;
+    var canPush = hasWebNotify() && Notification.permission === "granted";
 
     doses.forEach(function (dose) {
       if (isTaken(dateKey, dose.key)) return;
@@ -696,19 +876,19 @@
 
       var target = timeToMinutes(dose.time);
       var diff = now - target;
-      if (forceNow) {
-        if (diff < -1 || diff > 120) return;
-      } else if (diff < 0 || diff > 1) {
-        return;
-      }
+      if (diff < -1 || diff > pastLimit) return;
 
       state.notified[dateKey][dose.key] = true;
       saveState();
-      showNotification(
-        "💊 약 먹을 시간",
-        dose.name + " · " + dose.time + (diff > 1 ? " (방금 지남)" : ""),
-        "pill-reminder-" + dose.key,
-      );
+      if (canPush) {
+        showNotification(
+          "💊 약 먹을 시간",
+          dose.name + " · " + dose.time + (diff > 1 ? " (방금 지남)" : ""),
+          "pill-reminder-" + dose.key,
+        );
+      } else {
+        showInAppDoseAlert(dose, diff);
+      }
     });
   }
 
@@ -731,6 +911,12 @@
       })
       .then(function (reg) {
         swRegistration = reg;
+        if (reg.waiting && reg.waiting.state === "installed") {
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        }
+        return reg.update().catch(function () {});
+      })
+      .then(function () {
         syncScheduleToWorker();
       })
       .catch(function () {
@@ -747,11 +933,21 @@
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "visible") {
         postToWorker({ type: "CHECK_NOW" });
+        tryNotifyDueDoses(true, CATCHUP_MIN);
       }
     });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  function bootApp() {
+    if (window.__PR_APP_BOOTED) return;
+    window.__PR_APP_BOOTED = true;
+
+    try {
+      initUiHelp();
+    } catch (_e) {
+      /* optional */
+    }
+
     loadPremium();
     loadState();
     lastDateKey = todayKey();
@@ -774,15 +970,26 @@
     if (premiumBackdrop) premiumBackdrop.addEventListener("click", closePremiumModal);
 
     window.addEventListener("pr-premium-granted", grantPremium);
+    window.addEventListener("pr-ait-ready", ensureBannerAds);
 
     renderAll();
+    ensureBannerAds();
     tryNotifyDueDoses(false);
     setInterval(function () {
       onDayChange();
       tryNotifyDueDoses(false);
+      if (hasWebNotify() && Notification.permission === "granted") {
+        syncScheduleToWorker();
+      }
     }, TICK_MS);
 
     bindServiceWorkerMessages();
     registerServiceWorker();
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootApp);
+  } else {
+    bootApp();
+  }
 })();
