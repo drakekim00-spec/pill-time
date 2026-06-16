@@ -6,7 +6,7 @@ dotenv.config();
 var userKey = process.env.TOSS_TEST_USER_KEY || "";
 var template = process.env.TOSS_TEMPLATE_SET_CODE || "pill-time-templateSetCode";
 var deploymentId =
-  process.env.TOSS_DEPLOYMENT_ID || "019ece6c-3dfa-7456-8bab-4d0ddb289854";
+  process.env.TOSS_DEPLOYMENT_ID || "019ece6d-ea41-7914-839b-17994e6aff60";
 
 console.log("mtls:", isTossApiReady());
 if (!isTossApiReady()) {

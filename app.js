@@ -595,24 +595,29 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
       btn.textContent = "알림 켜기";
     }
 
-    var webGranted = hasWebNotify() && Notification.permission === "granted";
-    var tossOn = isTossNotifyOn();
+    var notifyOn = isNotifyEnabled();
 
-    if (webGranted || tossOn) {
+    if (notifyOn) {
       if (btn) {
         btn.textContent = "알림 켜졌음";
         btn.classList.add("is-on");
       }
       if (hint) {
-        hint.textContent = hasWebNotify()
-          ? "알림이 켜져 있어요. 정해진 시간에 알려 드릴게요."
-          : "알림이 켜져 있어요. 앱을 켜 둔 동안 화면으로 알려 드려요.";
+        if (isTossMiniapp() && hasApiBase()) {
+          hint.textContent = "알림이 켜져 있어요. 정해진 시간에 토스로 알려 드릴게요.";
+        } else if (hasWebNotify()) {
+          hint.textContent = "알림이 켜져 있어요. 정해진 시간에 알려 드릴게요.";
+        } else {
+          hint.textContent = "알림이 켜져 있어요. 앱을 켜 둔 동안 화면으로 알려 드려요.";
+        }
       }
       return;
     }
 
     if (hint) {
-      if (hasWebNotify() && Notification.permission === "denied") {
+      if (isTossMiniapp()) {
+        hint.textContent = "토스 알림 허용이 필요해요. 아래 버튼을 눌러 주세요.";
+      } else if (hasWebNotify() && Notification.permission === "denied") {
         hint.textContent = "알림이 꺼져 있어요. 토스 설정에서 이 앱 알림을 허용해 주세요.";
       } else if (!hasWebNotify() && hasTossNotifyBridge()) {
         hint.textContent = "토스 알림 허용이 필요해요. 아래 버튼을 눌러 주세요.";
@@ -730,6 +735,16 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     } catch (_e) {
       return false;
     }
+  }
+
+  function isNotifyEnabled() {
+    if (isTossMiniapp()) {
+      return isTossNotifyOn();
+    }
+    return (
+      isTossNotifyOn() ||
+      (hasWebNotify() && Notification.permission === "granted")
+    );
   }
 
   function setTossNotifyOn() {
@@ -889,13 +904,14 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
   }
 
   function tryNotifyDueDoses(forceNow, catchUpMin) {
-    if (!isTossNotifyOn() && (!hasWebNotify() || Notification.permission !== "granted")) return;
+    if (!isNotifyEnabled()) return;
 
     var dateKey = ensureDayBuckets();
     var doses = getTodayDoses();
     var now = nowMinutes();
     var pastLimit = catchUpMin != null ? catchUpMin : forceNow ? CATCHUP_MIN : DUE_WINDOW_MIN;
-    var canPush = hasWebNotify() && Notification.permission === "granted";
+    var canPush =
+      !isTossMiniapp() && hasWebNotify() && Notification.permission === "granted";
 
     doses.forEach(function (dose) {
       if (isTaken(dateKey, dose.key)) return;
