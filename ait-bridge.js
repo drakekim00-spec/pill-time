@@ -176,11 +176,16 @@ function requestNotificationAgreementByCode(templateCode) {
   }
   return new Promise(function (resolve) {
     var settled = false;
+    var timer = null;
     function finish(result) {
       if (settled) return;
       settled = true;
+      if (timer) window.clearTimeout(timer);
       resolve(result);
     }
+    timer = window.setTimeout(function () {
+      finish({ ok: false, reason: "timeout" });
+    }, 20000);
     try {
       var cleanup = requestNotificationAgreement({
         options: { templateCode: templateCode },
@@ -209,6 +214,10 @@ function requestNotificationAgreementByCode(templateCode) {
 }
 
 function loginForPush() {
+  var existing = getStoredUserKey();
+  if (existing) {
+    return Promise.resolve({ ok: true, userKey: existing });
+  }
   if (!getApiBase()) {
     return Promise.resolve({ ok: false, reason: "no_api" });
   }

@@ -458,23 +458,29 @@
   margin: 0 0 12px;
   font-size: 14px;
   line-height: 1.55;
-  gap: 6px;
 }
 
 .pr-notify-lead-text {
+  margin: 0;
   font-weight: 500;
+}
+
+.pr-notify-lead-tail {
+  gap: 0.35em;
 }
 
 .pr-notify-help {
   flex-shrink: 0;
 }
 
+/* ? 말풍선이 알림 버튼을 가리지 않게 위로 띄움 */
 .pr-notify-help .ui-help-popover {
   top: auto;
   bottom: calc(100% + 8px);
-  left: auto;
-  right: 0;
-  transform: none;
+}
+
+.pr-notify-btn.is-on {
+  cursor: pointer;
 }
 
 .pr-notify-btn.is-on:disabled {
@@ -504,6 +510,10 @@
 
 .pr-notify-hint:empty {
   display: none;
+}
+
+.pr-notify-hint.is-error {
+  color: #c62828;
 }
 
 /* [앱인토스 배너광고 교체 지점] 카드 사이 2곳 */
@@ -548,6 +558,18 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--ui-text-sec);
+}
+
+.pr-ad-banner__slot.is-live {
+  min-height: 72px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.pr-ad-banner__slot.is-live .pr-ad-banner__badge,
+.pr-ad-banner__slot.is-live .pr-ad-banner__placeholder {
+  display: none;
 }
 
 .pr-ad-banner[hidden] {

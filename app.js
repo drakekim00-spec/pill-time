@@ -351,6 +351,26 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     el.classList.toggle("is-error", !!isError);
   }
 
+  function setNotifyHint(text, isError) {
+    var hint = $("prNotifyHint");
+    if (!hint) return;
+    hint.textContent = text || "";
+    hint.classList.toggle("is-error", !!isError);
+  }
+
+  function notifyFailMessage(result) {
+    if (!result) return "알림 동의가 필요해요.";
+    if (result.reason === "rejected") return "알림 수신을 거부했어요.";
+    if (result.reason === "timeout") {
+      return "동의 창이 안 열렸어요. 콘솔 동의문 코드를 확인해 주세요.";
+    }
+    if (result.reason === "unsupported") {
+      return "토스 앱에서 다시 열어 주세요.";
+    }
+    if (result.reason === "error") return "동의 요청에 실패했어요. 다시 눌러 주세요.";
+    return "토스 알림 동의가 필요해요.";
+  }
+
   function normalizeTime(value) {
     if (!value) return "";
     var parts = value.split(":");
@@ -852,38 +872,42 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
 
   function proceedTossNotifyAgreement() {
     if (!hasTossNotifyTemplate()) {
+      setNotifyHint("알림 동의문 코드가 없어요.", true);
       setStatus("알림 동의문 코드가 없어요.", true);
       renderNotifyCard();
       return;
     }
     requestTossNotifyAgreement().then(function (result) {
       if (result && result.ok) {
-        afterNotifyEnabled();
+        setNotifyHint("동의했어요. 연결 중…");
+        ensurePushLogin().then(function (loginResult) {
+          if (hasApiBase() && (!loginResult || !loginResult.ok)) {
+            afterNotifyEnabled();
+            setNotifyHint("동의는 됐어요. 서버 연결만 잠시 후 다시 눌러 주세요.", true);
+            return;
+          }
+          afterNotifyEnabled();
+        });
         return;
       }
       if (result && result.reason === "rejected") {
         clearTossNotifyOn();
-        setStatus("알림 수신을 거부했어요.", true);
-      } else {
-        setStatus("토스 알림 동의가 필요해요.", true);
       }
+      var msg = notifyFailMessage(result);
+      setNotifyHint(msg, true);
+      setStatus(msg, true);
       renderNotifyCard();
     });
   }
 
   function runTossNotifyFlow() {
-    ensurePushLogin().then(function (loginResult) {
-      if (hasApiBase() && (!loginResult || !loginResult.ok)) {
-        setStatus("토스 로그인이 필요해요. 잠시 후 다시 눌러 주세요.", true);
-        renderNotifyCard();
-        return;
-      }
-      proceedTossNotifyAgreement();
-    });
+    setNotifyHint("동의 창을 여는 중…");
+    proceedTossNotifyAgreement();
   }
 
   function requestNotifyPermission() {
     setStatus("알림 설정 중…");
+    setNotifyHint("잠시만요…");
 
     if (!window.PR_AIT) {
       window.addEventListener(
