@@ -63,6 +63,11 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     return window.PR_USER_PREMIUM === true;
   }
 
+  function isTossMiniapp() {
+    var bridge = window.PR_AIT;
+    return !!(bridge && bridge.isTossMiniapp);
+  }
+
   function loadPremium() {
     try {
       if (localStorage.getItem(PREMIUM_KEY) === "1") {
@@ -145,13 +150,20 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     if (isPremiumUser()) return;
     var bridge = window.PR_AIT;
     if (!bridge || !bridge.initBannerAds) return;
-    bridge.initBannerAds().then(function (result) {
-      if (result && result.ok) return;
+
+    function retry(delayMs) {
       window.setTimeout(function () {
+        if (isPremiumUser()) return;
         if (window.PR_AIT && window.PR_AIT.initBannerAds) {
           window.PR_AIT.initBannerAds();
         }
-      }, 2500);
+      }, delayMs);
+    }
+
+    bridge.initBannerAds().then(function (result) {
+      if (result && result.ok) return;
+      retry(2000);
+      retry(5000);
     });
   }
 
@@ -704,8 +716,7 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
   }
 
   function hasTossNotifyBridge() {
-    var bridge = window.PR_AIT;
-    return !!(bridge && bridge.requestNotificationAgreement);
+    return isTossMiniapp();
   }
 
   function hasTossNotifyTemplate() {
@@ -777,8 +788,53 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     if (navigator.vibrate) navigator.vibrate(80);
   }
 
+  function proceedTossNotifyAgreement() {
+    if (!hasTossNotifyTemplate()) {
+      setTossNotifyOn();
+      afterNotifyEnabled();
+      return;
+    }
+    requestTossNotifyAgreement().then(function (result) {
+      if (result && result.ok) {
+        setTossNotifyOn();
+        afterNotifyEnabled();
+        return;
+      }
+      setStatus("토스 알림 동의가 필요해요.", true);
+      renderNotifyCard();
+    });
+  }
+
+  function runTossNotifyFlow() {
+    ensurePushLogin().then(function (loginResult) {
+      if (hasApiBase() && (!loginResult || !loginResult.ok)) {
+        setStatus("토스 로그인이 필요해요. 잠시 후 다시 눌러 주세요.", true);
+        renderNotifyCard();
+        return;
+      }
+      proceedTossNotifyAgreement();
+    });
+  }
+
   function requestNotifyPermission() {
     setStatus("알림 설정 중…");
+
+    if (!window.PR_AIT) {
+      window.addEventListener(
+        "pr-ait-ready",
+        function () {
+          requestNotifyPermission();
+        },
+        { once: true },
+      );
+      return;
+    }
+
+    if (isTossMiniapp()) {
+      runTossNotifyFlow();
+      return;
+    }
+
     if (hasWebNotify() && Notification.permission === "granted") {
       requestTossNotifyAgreement().finally(function () {
         setStatus("이미 알림이 켜져 있어요.");
@@ -800,35 +856,6 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
           setStatus("알림 허용이 필요해요.", true);
         }
         renderNotifyCard();
-      });
-      return;
-    }
-
-    if (hasTossNotifyBridge()) {
-      ensurePushLogin().then(function (loginResult) {
-        function proceedAgreement() {
-          if (!hasTossNotifyTemplate()) {
-            setTossNotifyOn();
-            afterNotifyEnabled();
-            return;
-          }
-          requestTossNotifyAgreement().then(function (result) {
-            if (result && result.ok) {
-              setTossNotifyOn();
-              afterNotifyEnabled();
-              return;
-            }
-            setStatus("토스 알림 동의가 필요해요.", true);
-            renderNotifyCard();
-          });
-        }
-
-        if (hasApiBase() && (!loginResult || !loginResult.ok)) {
-          setStatus("토스 로그인이 필요해요. 다시 시도해 주세요.", true);
-          renderNotifyCard();
-          return;
-        }
-        proceedAgreement();
       });
       return;
     }
@@ -987,9 +1014,27 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     registerServiceWorker();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bootApp);
-  } else {
-    bootApp();
+  function scheduleBoot() {
+    if (window.__PR_APP_BOOTED) return;
+    function start() {
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", bootApp, { once: true });
+      } else {
+        bootApp();
+      }
+    }
+    if (window.PR_AIT) {
+      start();
+      return;
+    }
+    window.addEventListener(
+      "pr-ait-ready",
+      function () {
+        start();
+      },
+      { once: true },
+    );
   }
+
+  scheduleBoot();
 })();

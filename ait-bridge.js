@@ -86,10 +86,7 @@ function isBannerAdSupported() {
     return (
       typeof TossAds !== "undefined" &&
       TossAds.initialize &&
-      TossAds.initialize.isSupported() === true &&
-      TossAds.attachBanner &&
-      (!TossAds.attachBanner.isSupported ||
-        TossAds.attachBanner.isSupported() === true)
+      TossAds.attachBanner
     );
   } catch (_e) {
     return false;
@@ -141,6 +138,11 @@ function initBannerAds() {
   if (bannerInitPromise) return bannerInitPromise;
 
   bannerInitPromise = new Promise(function (resolve) {
+    function done(result) {
+      if (!result || !result.ok) bannerInitPromise = null;
+      resolve(result || { ok: false, reason: "init_failed" });
+    }
+
     if (tossAdsInitialized) {
       mountBannerAds();
       resolve({ ok: true, reason: "already_initialized" });
@@ -156,14 +158,12 @@ function initBannerAds() {
             resolve({ ok: true });
           },
           onInitializationFailed: function () {
-            bannerInitPromise = null;
-            resolve({ ok: false, reason: "init_failed" });
+            done({ ok: false, reason: "init_failed" });
           },
         },
       });
     } catch (_e) {
-      bannerInitPromise = null;
-      resolve({ ok: false, reason: "error" });
+      done({ ok: false, reason: "error" });
     }
   });
 
@@ -234,6 +234,7 @@ function loginForPush() {
 }
 
 window.PR_AIT = {
+  isTossMiniapp: true,
   isIapSupported: isIapSupported,
   purchasePremium: purchasePremium,
   grantPremium: grantPremium,

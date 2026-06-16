@@ -17,7 +17,7 @@ var app = express();
 var PORT = Number(process.env.PORT) || 8789;
 var TEMPLATE = process.env.TOSS_TEMPLATE_SET_CODE || "pill-time-templateSetCode";
 var DEPLOYMENT_ID =
-  process.env.TOSS_DEPLOYMENT_ID || "019ece60-7a7c-705f-9f34-dbafe02e7df2";
+  process.env.TOSS_DEPLOYMENT_ID || "019ece6c-3dfa-7456-8bab-4d0ddb289854";
 
 app.use(
   cors({

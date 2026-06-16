@@ -4,6 +4,7 @@ import "./app.js";
 
 function installAitStub() {
   window.PR_AIT = {
+    isTossMiniapp: false,
     isIapSupported: function () {
       return false;
     },
