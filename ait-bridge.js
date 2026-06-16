@@ -170,48 +170,97 @@ function initBannerAds() {
   return bannerInitPromise;
 }
 
+var activeAgreementCleanup = null;
+
+function releaseAgreementCleanup() {
+  if (!activeAgreementCleanup) return;
+  try {
+    activeAgreementCleanup();
+  } catch (_e) {
+    /* ignore */
+  }
+  activeAgreementCleanup = null;
+}
+
+function parseAgreementBridgeError(error) {
+  var msg = "";
+  var code = "";
+  if (typeof error === "string") {
+    msg = error;
+  } else if (error && typeof error === "object") {
+    if (error.message) msg = String(error.message);
+    else if (error.reason) msg = String(error.reason);
+    if (error.errorCode != null) code = String(error.errorCode);
+    else if (error.code != null) code = String(error.code);
+    if (!msg) {
+      try {
+        msg = JSON.stringify(error);
+      } catch (_e) {
+        msg = String(error);
+      }
+    }
+  } else if (error != null) {
+    msg = String(error);
+  }
+  var hay = (msg + " " + code).toLowerCase();
+  if (/version|unsupported|min.?version|5\.25|업데이트/.test(hay)) {
+    return { reason: "unsupported_version", detail: msg, error: error };
+  }
+  if (/template|not.?found|invalid|존재|없|코드/.test(hay)) {
+    return { reason: "bad_template", detail: msg, error: error };
+  }
+  return { reason: "error", detail: msg, error: error };
+}
+
 function requestNotificationAgreementByCode(templateCode) {
   if (!templateCode || typeof requestNotificationAgreement !== "function") {
     return Promise.resolve({ ok: false, reason: "unsupported" });
   }
+  releaseAgreementCleanup();
   return new Promise(function (resolve) {
     var settled = false;
     var timer = null;
+    var cleanup = null;
     function finish(result) {
       if (settled) return;
       settled = true;
       if (timer) window.clearTimeout(timer);
+      releaseAgreementCleanup();
       resolve(result);
     }
     timer = window.setTimeout(function () {
       finish({ ok: false, reason: "timeout" });
     }, 20000);
     try {
-      var cleanup = requestNotificationAgreement({
-        options: { templateCode: templateCode },
+      cleanup = requestNotificationAgreement({
+        options: { templateCode: String(templateCode).trim() },
         onEvent: function (event) {
-          if (cleanup) cleanup();
           var type =
             typeof event === "string"
               ? event
               : event && (event.type || event.result || event.agreementResult);
           if (type === "newAgreement" || type === "alreadyAgreed") {
+            if (cleanup) cleanup();
             finish({ ok: true, event: event });
             return;
           }
           if (type === "agreementRejected") {
+            if (cleanup) cleanup();
             finish({ ok: false, reason: "rejected", event: event });
             return;
           }
+          if (cleanup) cleanup();
           finish({ ok: false, reason: "unknown_event", event: event, type: type });
         },
         onError: function (error) {
           if (cleanup) cleanup();
-          finish({ ok: false, reason: "error", error: error });
+          var parsed = parseAgreementBridgeError(error);
+          finish(parsed);
         },
       });
+      activeAgreementCleanup = cleanup;
     } catch (error) {
-      finish({ ok: false, reason: "error", error: error });
+      finish(parseAgreementBridgeError(error));
     }
   });
 }

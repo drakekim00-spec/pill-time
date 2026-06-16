@@ -157,7 +157,7 @@ export async function sendTestMessage(userKey, templateSetCode, deploymentId, co
   return res;
 }
 
-var FALLBACK_DEPLOYMENT_ID = "019ecf5d-3a1c-7d11-a78a-53eade7db6bd";
+var FALLBACK_DEPLOYMENT_ID = "019ecf87-c71c-7f69-8b06-5cf3caa12dff";
 
 export function getDeploymentId() {
   var id = String(process.env.TOSS_DEPLOYMENT_ID || "").trim();

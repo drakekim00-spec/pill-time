@@ -459,15 +459,23 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
     if (!result) return "알림 동의가 필요해요.";
     if (result.reason === "rejected") return "알림 수신을 거부했어요.";
     if (result.reason === "timeout") {
-      return "동의 창이 안 열렸어요. 콘솔 동의문 코드를 확인해 주세요.";
+      return "동의 창이 안 열렸어요. 토스 앱을 최신으로 올리고, 콘솔 동의문 코드를 확인해 주세요.";
     }
     if (result.reason === "unsupported") {
       return "토스 앱에서 다시 열어 주세요.";
     }
+    if (result.reason === "unsupported_version") {
+      return "토스 앱을 최신 버전으로 업데이트한 뒤 다시 눌러 주세요.";
+    }
+    if (result.reason === "bad_template") {
+      return "동의문 코드가 맞지 않아요. 콘솔 스마트발송 → 알림동의문에서 코드를 확인해 주세요.";
+    }
     if (result.reason === "unknown_event") {
       return "동의 결과를 못 읽었어요. 다시 눌러 주세요.";
     }
-    if (result.reason === "error") return "동의 요청에 실패했어요. 다시 눌러 주세요.";
+    if (result.reason === "error") {
+      return "동의 요청에 실패했어요. 콘솔 동의문 코드(pill-time-templateCode)와 최신 ait 업로드를 확인해 주세요.";
+    }
     return "토스 알림 동의가 필요해요.";
   }
 
@@ -972,21 +980,27 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
     if (navigator.vibrate) navigator.vibrate(80);
   }
 
-  function proceedTossNotifyAgreement() {
+  function resetNotifyButton() {
+    var btn = $("prNotifyBtn");
+    if (!btn) return;
+    btn.disabled = false;
+    btn.textContent = "알림 켜기";
+    btn.classList.remove("is-on");
+  }
+
+  function proceedTossNotifyAgreement(loginResult) {
     if (!hasTossNotifyTemplate()) {
       setNotifyHint("알림 동의문 코드가 없어요.", true);
       setStatus("알림 동의문 코드가 없어요.", true);
       renderNotifyCard();
+      resetNotifyButton();
       return;
     }
+    setNotifyHint("동의 창을 여는 중…");
     requestTossNotifyAgreement().then(function (result) {
-      var btn = $("prNotifyBtn");
       if (result && result.ok) {
-        setNotifyHint("동의했어요. 토스 로그인 중…");
-        wakeServer();
-        ensurePushLogin().then(function (loginResult) {
-          finishNotifyEnable(loginResult);
-        });
+        setNotifyHint("동의했어요. 서버에 저장 중…");
+        finishNotifyEnable(loginResult);
         return;
       }
       if (result && result.reason === "rejected") {
@@ -995,20 +1009,28 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
       var msg = notifyFailMessage(result);
       setNotifyHint(msg, true);
       setStatus(msg, true);
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "알림 켜기";
-        btn.classList.remove("is-on");
-      }
+      resetNotifyButton();
+      renderNotifyCard();
     });
   }
 
   function runTossNotifyFlow() {
     var btn = $("prNotifyBtn");
     if (btn) btn.disabled = true;
-    setNotifyHint("동의 창을 여는 중…");
+    setNotifyHint("토스 로그인 중…");
     wakeServer();
-    proceedTossNotifyAgreement();
+    ensurePushLogin().then(function (loginResult) {
+      if (!loginResult || !loginResult.ok) {
+        clearTossNotifyOn();
+        var loginMsg = loginFailMessage(loginResult);
+        setNotifyHint(loginMsg, true);
+        setStatus(loginMsg, true);
+        resetNotifyButton();
+        renderNotifyCard();
+        return;
+      }
+      proceedTossNotifyAgreement(loginResult);
+    });
   }
 
   function requestNotifyPermission() {
