@@ -7,7 +7,7 @@ import {
   appLogin,
   requestNotificationAgreement,
 } from "@apps-in-toss/web-framework";
-import { getApiBase, setStoredUserKey } from "./pr-server.js";
+import { getApiBase, setStoredUserKey, wakeApiServer } from "./pr-server.js";
 
 function grantPremium() {
   window.PR_USER_PREMIUM = true;
@@ -265,6 +265,24 @@ function requestNotificationAgreementByCode(templateCode) {
   });
 }
 
+function withTimeout(promise, ms, code) {
+  return new Promise(function (resolve, reject) {
+    var timer = window.setTimeout(function () {
+      reject(new Error(code || "timeout"));
+    }, ms);
+    promise.then(
+      function (value) {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      function (error) {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 function loginForPush() {
   var existing = getStoredUserKey();
   if (existing) {
@@ -276,32 +294,45 @@ function loginForPush() {
   if (typeof appLogin !== "function") {
     return Promise.resolve({ ok: false, reason: "unsupported" });
   }
-  return appLogin()
+  return withTimeout(appLogin(), 25000, "login_timeout")
     .then(function (auth) {
       if (!auth || !auth.authorizationCode) {
         return { ok: false, reason: "no_code" };
       }
-      return fetch(getApiBase() + "/api/auth/session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          authorizationCode: auth.authorizationCode,
-          referrer: auth.referrer || "DEFAULT",
-        }),
-      }).then(function (res) {
-        if (!res.ok) {
-          return { ok: false, reason: res.status === 503 ? "network" : "auth_failed" };
-        }
-        return res.json().then(function (data) {
-          if (data && data.ok && data.userKey) {
-            setStoredUserKey(data.userKey);
-            return { ok: true, userKey: data.userKey };
+      return wakeApiServer().then(function () {
+        return withTimeout(
+          fetch(getApiBase() + "/api/auth/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              authorizationCode: auth.authorizationCode,
+              referrer: auth.referrer || "DEFAULT",
+            }),
+          }),
+          45000,
+          "network_timeout",
+        ).then(function (res) {
+          if (!res.ok) {
+            return { ok: false, reason: res.status === 503 ? "network" : "auth_failed" };
           }
-          return { ok: false, reason: "auth_failed", data: data };
+          return res.json().then(function (data) {
+            if (data && data.ok && data.userKey) {
+              setStoredUserKey(data.userKey);
+              return { ok: true, userKey: data.userKey };
+            }
+            return { ok: false, reason: "auth_failed", data: data };
+          });
         });
       });
     })
     .catch(function (error) {
+      var code = error && error.message ? String(error.message) : "";
+      if (code === "login_timeout") {
+        return { ok: false, reason: "timeout" };
+      }
+      if (code === "network_timeout") {
+        return { ok: false, reason: "network" };
+      }
       return { ok: false, reason: "error", error: error };
     });
 }

@@ -391,6 +391,9 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
     if (result.reason === "unsupported") return "토스 앱에서 다시 열어 주세요.";
     if (result.reason === "no_api") return "서버 주소가 없어요.";
     if (result.reason === "auth_failed") return "로그인 연결에 실패했어요. 잠시 후 다시 눌러 주세요.";
+    if (result.reason === "timeout") {
+      return "로그인이 오래 걸려요. 약관 창이 안 보이면 다시 눌러 주세요.";
+    }
     if (result.reason === "network" || result.reason === "error") {
       return "서버가 잠들었을 수 있어요. 잠시 후 알림 켜기를 다시 눌러 주세요.";
     }
@@ -988,7 +991,7 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
     btn.classList.remove("is-on");
   }
 
-  function proceedTossNotifyAgreement(loginResult) {
+  function proceedTossNotifyAgreement() {
     if (!hasTossNotifyTemplate()) {
       setNotifyHint("알림 동의문 코드가 없어요.", true);
       setStatus("알림 동의문 코드가 없어요.", true);
@@ -999,8 +1002,11 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
     setNotifyHint("동의 창을 여는 중…");
     requestTossNotifyAgreement().then(function (result) {
       if (result && result.ok) {
-        setNotifyHint("동의했어요. 서버에 저장 중…");
-        finishNotifyEnable(loginResult);
+        setNotifyHint("동의했어요. 연결 중…");
+        wakeServer();
+        ensurePushLogin().then(function (loginResult) {
+          finishNotifyEnable(loginResult);
+        });
         return;
       }
       if (result && result.reason === "rejected") {
@@ -1017,20 +1023,9 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
   function runTossNotifyFlow() {
     var btn = $("prNotifyBtn");
     if (btn) btn.disabled = true;
-    setNotifyHint("토스 로그인 중…");
+    setNotifyHint("동의 창을 여는 중…");
     wakeServer();
-    ensurePushLogin().then(function (loginResult) {
-      if (!loginResult || !loginResult.ok) {
-        clearTossNotifyOn();
-        var loginMsg = loginFailMessage(loginResult);
-        setNotifyHint(loginMsg, true);
-        setStatus(loginMsg, true);
-        resetNotifyButton();
-        renderNotifyCard();
-        return;
-      }
-      proceedTossNotifyAgreement(loginResult);
-    });
+    proceedTossNotifyAgreement();
   }
 
   function requestNotifyPermission() {
