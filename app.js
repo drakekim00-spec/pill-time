@@ -68,6 +68,28 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     return !!(bridge && bridge.isTossMiniapp);
   }
 
+  function isTossWebView() {
+    try {
+      return !!(
+        window.ReactNativeWebView ||
+        window.__GRANITE_NATIVE_EMITTER ||
+        (window.navigator && /toss|intoss|granite/i.test(window.navigator.userAgent || ""))
+      );
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function shouldUseTossNotifyFlow() {
+    if (isTossMiniapp()) return true;
+    var bridge = window.PR_AIT;
+    return !!(
+      isTossWebView() &&
+      bridge &&
+      typeof bridge.requestNotificationAgreement === "function"
+    );
+  }
+
   function loadPremium() {
     try {
       if (localStorage.getItem(PREMIUM_KEY) === "1") {
@@ -356,6 +378,11 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     if (!hint) return;
     hint.textContent = text || "";
     hint.classList.toggle("is-error", !!isError);
+    if (text) {
+      hint.dataset.state = isError ? "error" : "busy";
+    } else {
+      delete hint.dataset.state;
+    }
   }
 
   function notifyFailMessage(result) {
@@ -366,6 +393,9 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     }
     if (result.reason === "unsupported") {
       return "토스 앱에서 다시 열어 주세요.";
+    }
+    if (result.reason === "unknown_event") {
+      return "동의 결과를 못 읽었어요. 다시 눌러 주세요.";
     }
     if (result.reason === "error") return "동의 요청에 실패했어요. 다시 눌러 주세요.";
     return "토스 알림 동의가 필요해요.";
@@ -636,7 +666,9 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     }
 
     if (hint) {
-      if (isTossMiniapp()) {
+      if (hint.dataset.state === "error" || hint.dataset.state === "busy") {
+        /* 버튼 누른 직후 안내·오류 문구는 여기서 지우지 않음 */
+      } else if (isTossMiniapp() || shouldUseTossNotifyFlow()) {
         hint.textContent = "토스 알림 허용이 필요해요. 아래 버튼을 눌러 주세요.";
       } else if (hasWebNotify() && Notification.permission === "denied") {
         hint.textContent = "알림이 꺼져 있어요. 토스 설정에서 이 앱 알림을 허용해 주세요.";
@@ -743,7 +775,7 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
   }
 
   function hasTossNotifyBridge() {
-    return isTossMiniapp();
+    return shouldUseTossNotifyFlow();
   }
 
   function hasTossNotifyTemplate() {
@@ -765,7 +797,7 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
   }
 
   function isTossNotifyOn() {
-    if (!isTossMiniapp()) {
+    if (!shouldUseTossNotifyFlow()) {
       try {
         return localStorage.getItem(TOSS_NOTIFY_LEGACY_KEY) === "1";
       } catch (_e) {
@@ -784,7 +816,7 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
   }
 
   function isNotifyEnabled() {
-    if (isTossMiniapp()) {
+    if (shouldUseTossNotifyFlow()) {
       return isTossNotifyOn();
     }
     return (
@@ -795,7 +827,7 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
 
   function setTossNotifyOn() {
     try {
-      if (isTossMiniapp()) {
+      if (shouldUseTossNotifyFlow()) {
         localStorage.setItem(
           TOSS_NOTIFY_KEY,
           JSON.stringify({
@@ -857,6 +889,10 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     }
     pushScheduleToServer();
     tryNotifyDueDoses(true, CATCHUP_MIN);
+    var hint = $("prNotifyHint");
+    if (hint) delete hint.dataset.state;
+    var btn = $("prNotifyBtn");
+    if (btn) btn.disabled = false;
     renderNotifyCard();
     if (hasApiBase()) {
       setStatus("알림을 켰어요. 정해진 시간에 토스로 알려 드릴게요.");
@@ -878,6 +914,7 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
       return;
     }
     requestTossNotifyAgreement().then(function (result) {
+      var btn = $("prNotifyBtn");
       if (result && result.ok) {
         setNotifyHint("동의했어요. 연결 중…");
         ensurePushLogin().then(function (loginResult) {
@@ -896,11 +933,17 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
       var msg = notifyFailMessage(result);
       setNotifyHint(msg, true);
       setStatus(msg, true);
-      renderNotifyCard();
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "알림 켜기";
+        btn.classList.remove("is-on");
+      }
     });
   }
 
   function runTossNotifyFlow() {
+    var btn = $("prNotifyBtn");
+    if (btn) btn.disabled = true;
     setNotifyHint("동의 창을 여는 중…");
     proceedTossNotifyAgreement();
   }
@@ -920,8 +963,15 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
       return;
     }
 
-    if (isTossMiniapp()) {
+    if (shouldUseTossNotifyFlow()) {
       runTossNotifyFlow();
+      return;
+    }
+
+    if (isTossWebView()) {
+      var stuckMsg = "토스 연결이 안 됐어요. 최신 ait를 다시 올려 주세요.";
+      setNotifyHint(stuckMsg, true);
+      setStatus(stuckMsg, true);
       return;
     }
 
