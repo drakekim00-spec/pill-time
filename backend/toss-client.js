@@ -142,3 +142,17 @@ export async function sendFunctionalMessage(userKey, templateSetCode, context) {
   });
   return res;
 }
+
+export async function sendTestMessage(userKey, templateSetCode, deploymentId, context) {
+  var res = await tossRequest("POST", "/api-partner/v1/apps-in-toss/messenger/send-test-message", {
+    headers: {
+      "x-toss-user-key": String(userKey),
+    },
+    body: {
+      templateSetCode: templateSetCode,
+      deploymentId: deploymentId,
+      context: context || {},
+    },
+  });
+  return res;
+}

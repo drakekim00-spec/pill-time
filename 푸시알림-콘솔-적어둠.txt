@@ -43,9 +43,9 @@
   발송 코드 (서버)     pill-time-templateSetCode
                        → Render 서버가 토스 API 보낼 때
 
-  동의문 코드 (앱)     (콘솔 알림동의문 탭에서 확인)
-                       → index.html 의 notifyAgreementTemplateCode
-                       → 아직 화면에 코드 안 보이면 토스 문의
+  동의문 코드 (앱)     pill-time-templateCode
+                       → index.html · miniapp/.env 의 notifyAgreementTemplateCode
+                       ※ 콘솔 목록과 다르면 알림동의문 탭에서 확인 후 수정
 
   앱 영문 이름         pill-time
   표시 이름            약먹을시간
@@ -66,10 +66,10 @@
 
 
 ■ 아직 안 된 것
-  □ 문구 검수 승인
-  □ backend 서버 (Render) — 약·시간 저장 + 정해진 시간에 API 호출
-  □ 앱에서 userKey 받아서 서버로 보내기
-  □ 앱에서 알림 동의문 코드 넣기 (코드 확인되면)
+  ☑ 문구 검수 승인 (2026.06.10)
+  ☑ backend 서버 (Render) — 약·시간 저장 + 정해진 시간에 API 호출
+  □ 앱에서 userKey 받아서 서버로 보내기 (토스 QR 테스트)
+  ☑ 앱에서 알림 동의문 코드 넣기 (pill-time-templateCode)
 
 
 ■ 참고 문서

@@ -6,5 +6,8 @@ backend/.env
 miniapp/.env
 mTLS/*.key
 mTLS/*.pem
+mTLS.zip
+miniapp/.granite/
+miniapp/*.ait
 .DS_Store
 Thumbs.db

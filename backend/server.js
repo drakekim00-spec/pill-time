@@ -8,6 +8,7 @@ import {
   fetchLoginMe,
   isTossApiReady,
   sendFunctionalMessage,
+  sendTestMessage,
 } from "./toss-client.js";
 
 dotenv.config();
@@ -15,6 +16,8 @@ dotenv.config();
 var app = express();
 var PORT = Number(process.env.PORT) || 8789;
 var TEMPLATE = process.env.TOSS_TEMPLATE_SET_CODE || "pill-time-templateSetCode";
+var DEPLOYMENT_ID =
+  process.env.TOSS_DEPLOYMENT_ID || "019eb130-57e3-786f-9df8-aed142f2e26d";
 
 app.use(
   cors({
@@ -84,7 +87,36 @@ app.post("/api/push/test", async function (req, res) {
       return;
     }
     var result = await sendFunctionalMessage(userKey, TEMPLATE, {});
-    res.json({ ok: result.status >= 200 && result.status < 300, result: result.data });
+    res.json({
+      ok: result.status >= 200 && result.status < 300,
+      status: result.status,
+      result: result.data,
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err.message || err) });
+  }
+});
+
+app.post("/api/push/test-send", async function (req, res) {
+  try {
+    if (!isTossApiReady()) {
+      res.status(503).json({ ok: false, error: "mTLS not configured" });
+      return;
+    }
+    var userKey = req.header("x-pr-user-key") || (req.body && req.body.userKey);
+    if (!userKey) {
+      res.status(400).json({ ok: false, error: "userKey required" });
+      return;
+    }
+    var body = req.body || {};
+    var deploymentId = body.deploymentId || DEPLOYMENT_ID;
+    var result = await sendTestMessage(userKey, TEMPLATE, deploymentId, body.context || {});
+    res.json({
+      ok: result.status >= 200 && result.status < 300,
+      status: result.status,
+      deploymentId: deploymentId,
+      result: result.data,
+    });
   } catch (err) {
     res.status(500).json({ ok: false, error: String(err.message || err) });
   }

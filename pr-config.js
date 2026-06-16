@@ -17,6 +17,9 @@ if (typeof import.meta !== "undefined" && import.meta.env) {
   if (import.meta.env.VITE_AD_BANNER_MID_GROUP_ID) {
     bannerAdGroupIdMid = import.meta.env.VITE_AD_BANNER_MID_GROUP_ID;
   }
+  if (import.meta.env.VITE_NOTIFY_AGREEMENT_TEMPLATE_CODE) {
+    notifyAgreementTemplateCode = import.meta.env.VITE_NOTIFY_AGREEMENT_TEMPLATE_CODE;
+  }
   if (import.meta.env.VITE_API_BASE) {
     apiBase = import.meta.env.VITE_API_BASE;
   }
