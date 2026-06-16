@@ -118,7 +118,7 @@ app.post("/api/push/test-send", async function (req, res) {
       return;
     }
     var body = req.body || {};
-    var deploymentId = body.deploymentId || DEPLOYMENT_ID;
+    var deploymentId = body.deploymentId || getDeploymentId();
     var result = await sendTestMessage(userKey, TEMPLATE, deploymentId, body.context || {});
     res.json({
       ok: isPushSuccess(result),
