@@ -212,7 +212,41 @@ function parseAgreementBridgeError(error) {
   return { reason: "error", detail: msg, error: error };
 }
 
-function requestNotificationAgreementByCode(templateCode) {
+var AGREEMENT_CODE_CACHE_KEY = "pill-reminder-agree-template-code";
+
+function getCachedAgreementCode() {
+  try {
+    return localStorage.getItem(AGREEMENT_CODE_CACHE_KEY) || "";
+  } catch (_e) {
+    return "";
+  }
+}
+
+function setCachedAgreementCode(code) {
+  try {
+    if (code) localStorage.setItem(AGREEMENT_CODE_CACHE_KEY, String(code));
+  } catch (_e) {
+    /* ignore */
+  }
+}
+
+function getAgreementCodesToTry(primaryCode) {
+  var cfg = window.PR_CONFIG || {};
+  var list = [];
+  function add(code) {
+    var value = String(code || "").trim();
+    if (!value || list.indexOf(value) !== -1) return;
+    list.push(value);
+  }
+  add(getCachedAgreementCode());
+  add(primaryCode);
+  add(cfg.notifyAgreementTemplateCode);
+  add(cfg.notifyTemplateSetCode);
+  add("pill-time-templateSetCode");
+  return list;
+}
+
+function requestSingleAgreement(templateCode) {
   if (!templateCode || typeof requestNotificationAgreement !== "function") {
     return Promise.resolve({ ok: false, reason: "unsupported" });
   }
@@ -229,7 +263,7 @@ function requestNotificationAgreementByCode(templateCode) {
       resolve(result);
     }
     timer = window.setTimeout(function () {
-      finish({ ok: false, reason: "timeout" });
+      finish({ ok: false, reason: "timeout", templateCode: templateCode });
     }, 20000);
     try {
       cleanup = requestNotificationAgreement({
@@ -241,28 +275,64 @@ function requestNotificationAgreementByCode(templateCode) {
               : event && (event.type || event.result || event.agreementResult);
           if (type === "newAgreement" || type === "alreadyAgreed") {
             if (cleanup) cleanup();
-            finish({ ok: true, event: event });
+            finish({ ok: true, event: event, templateCode: templateCode });
             return;
           }
           if (type === "agreementRejected") {
             if (cleanup) cleanup();
-            finish({ ok: false, reason: "rejected", event: event });
+            finish({ ok: false, reason: "rejected", event: event, templateCode: templateCode });
             return;
           }
           if (cleanup) cleanup();
-          finish({ ok: false, reason: "unknown_event", event: event, type: type });
+          finish({ ok: false, reason: "unknown_event", event: event, type: type, templateCode: templateCode });
         },
         onError: function (error) {
           if (cleanup) cleanup();
           var parsed = parseAgreementBridgeError(error);
+          parsed.templateCode = templateCode;
           finish(parsed);
         },
       });
       activeAgreementCleanup = cleanup;
     } catch (error) {
-      finish(parseAgreementBridgeError(error));
+      var caught = parseAgreementBridgeError(error);
+      caught.templateCode = templateCode;
+      finish(caught);
     }
   });
+}
+
+function requestNotificationAgreementByCode(templateCode) {
+  var codes = getAgreementCodesToTry(templateCode);
+  if (!codes.length) {
+    return Promise.resolve({ ok: false, reason: "no_template" });
+  }
+
+  function tryAt(index) {
+    if (index >= codes.length) {
+      return Promise.resolve({
+        ok: false,
+        reason: "bad_template",
+        triedCodes: codes,
+      });
+    }
+    var code = codes[index];
+    return requestSingleAgreement(code).then(function (result) {
+      if (result && result.ok) {
+        setCachedAgreementCode(code);
+        return result;
+      }
+      if (result && result.reason === "rejected") {
+        return result;
+      }
+      if (result && (result.reason === "timeout" || result.reason === "unknown_event")) {
+        return result;
+      }
+      return tryAt(index + 1);
+    });
+  }
+
+  return tryAt(0);
 }
 
 function withTimeout(promise, ms, code) {

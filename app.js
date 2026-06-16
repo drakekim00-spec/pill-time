@@ -471,13 +471,16 @@ import { hasApiBase, getStoredUserKey, syncScheduleToApi, wakeApiServer } from "
       return "토스 앱을 최신 버전으로 업데이트한 뒤 다시 눌러 주세요.";
     }
     if (result.reason === "bad_template") {
-      return "동의문 코드가 맞지 않아요. 콘솔 스마트발송 → 알림동의문에서 코드를 확인해 주세요.";
+      return "동의문 코드가 콘솔과 달라요. 스마트발송 → 알림동의문 목록에서 코드를 복사해 알려 주세요.";
+    }
+    if (result.reason === "no_template") {
+      return "알림 동의문 코드가 없어요.";
     }
     if (result.reason === "unknown_event") {
       return "동의 결과를 못 읽었어요. 다시 눌러 주세요.";
     }
     if (result.reason === "error") {
-      return "동의 요청에 실패했어요. 콘솔 동의문 코드(pill-time-templateCode)와 최신 ait 업로드를 확인해 주세요.";
+      return "동의 요청에 실패했어요. 콘솔 알림동의문 목록의 코드를 확인해 주세요.";
     }
     return "토스 알림 동의가 필요해요.";
   }

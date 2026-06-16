@@ -5,6 +5,7 @@ var bannerAdGroupIdTop =
 var bannerAdGroupIdMid =
   preset.bannerAdGroupIdMid || "ait.v2.live.be9f36b5ccd746af";
 var notifyAgreementTemplateCode = preset.notifyAgreementTemplateCode || "";
+var notifyTemplateSetCode = preset.notifyTemplateSetCode || "pill-time-templateSetCode";
 var apiBase = preset.apiBase || "";
 
 if (typeof import.meta !== "undefined" && import.meta.env) {
@@ -20,6 +21,9 @@ if (typeof import.meta !== "undefined" && import.meta.env) {
   if (import.meta.env.VITE_NOTIFY_AGREEMENT_TEMPLATE_CODE) {
     notifyAgreementTemplateCode = import.meta.env.VITE_NOTIFY_AGREEMENT_TEMPLATE_CODE;
   }
+  if (import.meta.env.VITE_NOTIFY_TEMPLATE_SET_CODE) {
+    notifyTemplateSetCode = import.meta.env.VITE_NOTIFY_TEMPLATE_SET_CODE;
+  }
   if (import.meta.env.VITE_API_BASE) {
     apiBase = import.meta.env.VITE_API_BASE;
   }
@@ -30,5 +34,6 @@ window.PR_CONFIG = {
   bannerAdGroupIdTop: bannerAdGroupIdTop,
   bannerAdGroupIdMid: bannerAdGroupIdMid,
   notifyAgreementTemplateCode: notifyAgreementTemplateCode,
+  notifyTemplateSetCode: notifyTemplateSetCode,
   apiBase: apiBase,
 };
