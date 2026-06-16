@@ -1,5 +1,5 @@
 import { initUiHelp } from "./ui/ui-help.js";
-import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
+import { hasApiBase, getStoredUserKey, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
 
 (function () {
   "use strict";
@@ -991,7 +991,22 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
     btn.classList.remove("is-on");
   }
 
-  function proceedTossNotifyAgreement() {
+  var loginHintTimer = null;
+
+  function startLoginHintProgress() {
+    if (loginHintTimer) window.clearTimeout(loginHintTimer);
+    setNotifyHint("연결 중…");
+    loginHintTimer = window.setTimeout(function () {
+      setNotifyHint("아래에 약관 창이 뜨면 동의해 주세요.");
+    }, 3000);
+  }
+
+  function stopLoginHintProgress() {
+    if (loginHintTimer) window.clearTimeout(loginHintTimer);
+    loginHintTimer = null;
+  }
+
+  function proceedTossNotifyAgreement(loginResult) {
     if (!hasTossNotifyTemplate()) {
       setNotifyHint("알림 동의문 코드가 없어요.", true);
       setStatus("알림 동의문 코드가 없어요.", true);
@@ -999,14 +1014,10 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
       resetNotifyButton();
       return;
     }
-    setNotifyHint("동의 창을 여는 중…");
+    setNotifyHint("알림 동의 창을 여는 중…");
     requestTossNotifyAgreement().then(function (result) {
       if (result && result.ok) {
-        setNotifyHint("동의했어요. 연결 중…");
-        wakeServer();
-        ensurePushLogin().then(function (loginResult) {
-          finishNotifyEnable(loginResult);
-        });
+        finishNotifyEnable(loginResult);
         return;
       }
       if (result && result.reason === "rejected") {
@@ -1023,9 +1034,35 @@ import { hasApiBase, syncScheduleToApi, wakeApiServer } from "./pr-server.js";
   function runTossNotifyFlow() {
     var btn = $("prNotifyBtn");
     if (btn) btn.disabled = true;
-    setNotifyHint("동의 창을 여는 중…");
     wakeServer();
-    proceedTossNotifyAgreement();
+
+    var savedUserKey = getStoredUserKey();
+    if (savedUserKey) {
+      proceedTossNotifyAgreement({ ok: true, userKey: savedUserKey });
+      return;
+    }
+
+    startLoginHintProgress();
+    wakeApiServer()
+      .catch(function () {
+        return null;
+      })
+      .then(function () {
+        return ensurePushLogin();
+      })
+      .then(function (loginResult) {
+        stopLoginHintProgress();
+        if (!loginResult || !loginResult.ok) {
+          clearTossNotifyOn();
+          var loginMsg = loginFailMessage(loginResult);
+          setNotifyHint(loginMsg, true);
+          setStatus(loginMsg, true);
+          resetNotifyButton();
+          renderNotifyCard();
+          return;
+        }
+        proceedTossNotifyAgreement(loginResult);
+      });
   }
 
   function requestNotifyPermission() {

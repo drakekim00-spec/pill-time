@@ -294,34 +294,38 @@ function loginForPush() {
   if (typeof appLogin !== "function") {
     return Promise.resolve({ ok: false, reason: "unsupported" });
   }
-  return withTimeout(appLogin(), 25000, "login_timeout")
+  return wakeApiServer()
+    .catch(function () {
+      return null;
+    })
+    .then(function () {
+      return withTimeout(appLogin(), 25000, "login_timeout");
+    })
     .then(function (auth) {
       if (!auth || !auth.authorizationCode) {
         return { ok: false, reason: "no_code" };
       }
-      return wakeApiServer().then(function () {
-        return withTimeout(
-          fetch(getApiBase() + "/api/auth/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              authorizationCode: auth.authorizationCode,
-              referrer: auth.referrer || "DEFAULT",
-            }),
+      return withTimeout(
+        fetch(getApiBase() + "/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            authorizationCode: auth.authorizationCode,
+            referrer: auth.referrer || "DEFAULT",
           }),
-          45000,
-          "network_timeout",
-        ).then(function (res) {
-          if (!res.ok) {
-            return { ok: false, reason: res.status === 503 ? "network" : "auth_failed" };
+        }),
+        45000,
+        "network_timeout",
+      ).then(function (res) {
+        if (!res.ok) {
+          return { ok: false, reason: res.status === 503 ? "network" : "auth_failed" };
+        }
+        return res.json().then(function (data) {
+          if (data && data.ok && data.userKey) {
+            setStoredUserKey(data.userKey);
+            return { ok: true, userKey: data.userKey };
           }
-          return res.json().then(function (data) {
-            if (data && data.ok && data.userKey) {
-              setStoredUserKey(data.userKey);
-              return { ok: true, userKey: data.userKey };
-            }
-            return { ok: false, reason: "auth_failed", data: data };
-          });
+          return { ok: false, reason: "auth_failed", data: data };
         });
       });
     })
