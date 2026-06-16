@@ -24,6 +24,19 @@ export function setStoredUserKey(userKey) {
   }
 }
 
+export function wakeApiServer() {
+  if (!hasApiBase()) return Promise.resolve({ ok: false, reason: "no_api" });
+  return fetch(getApiBase() + "/api/wake", { method: "GET" })
+    .then(function (res) {
+      return res.json().catch(function () {
+        return { ok: false, reason: "bad_json" };
+      });
+    })
+    .catch(function () {
+      return { ok: false, reason: "network" };
+    });
+}
+
 export function syncScheduleToApi(payload) {
   if (!hasApiBase()) return Promise.resolve({ ok: false, reason: "no_api" });
   var userKey = getStoredUserKey();
@@ -42,8 +55,12 @@ export function syncScheduleToApi(payload) {
     }),
   })
     .then(function (res) {
-      return res.json().catch(function () {
-        return { ok: false };
+      return res.json().then(function (data) {
+        var body = data || {};
+        if (!body.ok && res.status >= 400) {
+          body.reason = body.reason || "http_" + res.status;
+        }
+        return body;
       });
     })
     .catch(function () {

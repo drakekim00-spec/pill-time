@@ -1,7 +1,12 @@
-import { sendFunctionalMessage, isTossApiReady } from "./toss-client.js";
+import {
+  isTossApiReady,
+  isPushSuccess,
+  sendScheduledPush,
+} from "./toss-client.js";
 import { listActiveUsers, wasSent, markSent } from "./store.js";
 
 var TEMPLATE = process.env.TOSS_TEMPLATE_SET_CODE || "pill-time-templateSetCode";
+var TICK_MS = Number(process.env.SCHEDULER_TICK_MS) || 15000;
 var timer = null;
 
 function kstParts(date) {
@@ -19,9 +24,10 @@ function kstParts(date) {
   parts.forEach(function (p) {
     map[p.type] = p.value;
   });
+  var hour = String(map.hour === "24" ? "00" : map.hour).padStart(2, "0");
   return {
     dateKey: map.year + "-" + map.month + "-" + map.day,
-    hhmm: String(map.hour).padStart(2, "0") + ":" + String(map.minute).padStart(2, "0"),
+    hhmm: hour + ":" + String(map.minute).padStart(2, "0"),
   };
 }
 
@@ -50,8 +56,8 @@ async function tick() {
         if (wasSent(now.dateKey, user.userKey, key)) continue;
 
         try {
-          var res = await sendFunctionalMessage(user.userKey, TEMPLATE, {});
-          if (res.status >= 200 && res.status < 300 && res.data && res.data.resultType === "SUCCESS") {
+          var res = await sendScheduledPush(user.userKey, TEMPLATE, {});
+          if (isPushSuccess(res)) {
             markSent(now.dateKey, user.userKey, key);
             console.log("[push] sent", user.userKey, med.name, time);
           } else {
@@ -71,6 +77,6 @@ export function startScheduler() {
     tick().catch(function (err) {
       console.warn("[scheduler]", err.message || err);
     });
-  }, 30000);
+  }, TICK_MS);
   tick().catch(function () {});
 }

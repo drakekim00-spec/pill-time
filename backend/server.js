@@ -7,8 +7,12 @@ import {
   exchangeAuthCode,
   fetchLoginMe,
   isTossApiReady,
+  isPushSuccess,
   sendFunctionalMessage,
+  sendScheduledPush,
   sendTestMessage,
+  useTestPushApi,
+  getDeploymentId,
 } from "./toss-client.js";
 
 dotenv.config();
@@ -16,8 +20,6 @@ dotenv.config();
 var app = express();
 var PORT = Number(process.env.PORT) || 8789;
 var TEMPLATE = process.env.TOSS_TEMPLATE_SET_CODE || "pill-time-templateSetCode";
-var DEPLOYMENT_ID =
-  process.env.TOSS_DEPLOYMENT_ID || "019ecf50-e2b2-756b-9a28-6188a892e8b7";
 
 app.use(
   cors({
@@ -34,8 +36,14 @@ app.get("/api/health", function (_req, res) {
     service: "pill-time-api",
     mtls: isTossApiReady(),
     templateSetCode: TEMPLATE,
+    pushMode: useTestPushApi() ? "test" : "live",
+    deploymentId: getDeploymentId() || null,
     stats: getStats(),
   });
+});
+
+app.get("/api/wake", function (_req, res) {
+  res.json({ ok: true, awake: true, mtls: isTossApiReady() });
 });
 
 app.post("/api/auth/session", async function (req, res) {
@@ -86,10 +94,11 @@ app.post("/api/push/test", async function (req, res) {
       res.status(400).json({ ok: false, error: "userKey required" });
       return;
     }
-    var result = await sendFunctionalMessage(userKey, TEMPLATE, {});
+    var result = await sendScheduledPush(userKey, TEMPLATE, {});
     res.json({
-      ok: result.status >= 200 && result.status < 300,
+      ok: isPushSuccess(result),
       status: result.status,
+      pushMode: useTestPushApi() ? "test" : "live",
       result: result.data,
     });
   } catch (err) {
@@ -112,7 +121,7 @@ app.post("/api/push/test-send", async function (req, res) {
     var deploymentId = body.deploymentId || DEPLOYMENT_ID;
     var result = await sendTestMessage(userKey, TEMPLATE, deploymentId, body.context || {});
     res.json({
-      ok: result.status >= 200 && result.status < 300,
+      ok: isPushSuccess(result),
       status: result.status,
       deploymentId: deploymentId,
       result: result.data,

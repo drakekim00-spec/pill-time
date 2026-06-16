@@ -240,6 +240,9 @@ function loginForPush() {
           referrer: auth.referrer || "DEFAULT",
         }),
       }).then(function (res) {
+        if (!res.ok) {
+          return { ok: false, reason: res.status === 503 ? "network" : "auth_failed" };
+        }
         return res.json().then(function (data) {
           if (data && data.ok && data.userKey) {
             setStoredUserKey(data.userKey);

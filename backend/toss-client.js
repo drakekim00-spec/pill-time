@@ -156,3 +156,32 @@ export async function sendTestMessage(userKey, templateSetCode, deploymentId, co
   });
   return res;
 }
+
+var FALLBACK_DEPLOYMENT_ID = "019ecf5d-3a1c-7d11-a78a-53eade7db6bd";
+
+export function getDeploymentId() {
+  var id = String(process.env.TOSS_DEPLOYMENT_ID || "").trim();
+  return id || FALLBACK_DEPLOYMENT_ID;
+}
+
+export function useTestPushApi() {
+  var mode = String(process.env.TOSS_PUSH_MODE || "auto").toLowerCase();
+  if (mode === "live") return false;
+  if (mode === "test") return true;
+  return !!getDeploymentId();
+}
+
+export function isPushSuccess(res) {
+  return !!(res && res.status >= 200 && res.status < 300 && res.data && res.data.resultType === "SUCCESS");
+}
+
+export async function sendScheduledPush(userKey, templateSetCode, context) {
+  if (useTestPushApi()) {
+    var deploymentId = getDeploymentId();
+    if (!deploymentId) {
+      throw new Error("TOSS_DEPLOYMENT_ID 가 없어요 (테스트 발송용)");
+    }
+    return sendTestMessage(userKey, templateSetCode, deploymentId, context || {});
+  }
+  return sendFunctionalMessage(userKey, templateSetCode, context || {});
+}
