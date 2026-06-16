@@ -604,7 +604,8 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
       }
       if (hint) {
         if (isTossMiniapp() && hasApiBase()) {
-          hint.textContent = "알림이 켜져 있어요. 정해진 시간에 토스로 알려 드릴게요.";
+          hint.textContent =
+            "알림이 켜져 있어요. 동의 화면을 다시 보려면 버튼을 한 번 더 눌러 주세요.";
         } else if (hasWebNotify()) {
           hint.textContent = "알림이 켜져 있어요. 정해진 시간에 알려 드릴게요.";
         } else {
@@ -714,7 +715,8 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     }
   }
 
-  var TOSS_NOTIFY_KEY = "pill-reminder-toss-notify";
+  var TOSS_NOTIFY_KEY = "pill-reminder-toss-agree-v2";
+  var TOSS_NOTIFY_LEGACY_KEY = "pill-reminder-toss-notify";
 
   function hasWebNotify() {
     return typeof window.Notification !== "undefined";
@@ -729,9 +731,33 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     return !!(cfg.notifyAgreementTemplateCode && String(cfg.notifyAgreementTemplateCode).trim());
   }
 
-  function isTossNotifyOn() {
+  function getNotifyTemplateCode() {
+    var cfg = window.PR_CONFIG || {};
+    return String(cfg.notifyAgreementTemplateCode || "").trim();
+  }
+
+  function clearLegacyNotifyFlags() {
     try {
-      return localStorage.getItem(TOSS_NOTIFY_KEY) === "1";
+      localStorage.removeItem(TOSS_NOTIFY_LEGACY_KEY);
+    } catch (_e) {
+      /* ignore */
+    }
+  }
+
+  function isTossNotifyOn() {
+    if (!isTossMiniapp()) {
+      try {
+        return localStorage.getItem(TOSS_NOTIFY_LEGACY_KEY) === "1";
+      } catch (_e) {
+        return false;
+      }
+    }
+    try {
+      var raw = localStorage.getItem(TOSS_NOTIFY_KEY);
+      if (!raw) return false;
+      var rec = JSON.parse(raw);
+      var code = getNotifyTemplateCode();
+      return !!(rec && rec.agreed === true && code && rec.templateCode === code);
     } catch (_e) {
       return false;
     }
@@ -749,7 +775,28 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
 
   function setTossNotifyOn() {
     try {
-      localStorage.setItem(TOSS_NOTIFY_KEY, "1");
+      if (isTossMiniapp()) {
+        localStorage.setItem(
+          TOSS_NOTIFY_KEY,
+          JSON.stringify({
+            agreed: true,
+            templateCode: getNotifyTemplateCode(),
+            at: Date.now(),
+          }),
+        );
+        clearLegacyNotifyFlags();
+        return;
+      }
+      localStorage.setItem(TOSS_NOTIFY_LEGACY_KEY, "1");
+    } catch (_e) {
+      /* ignore */
+    }
+  }
+
+  function clearTossNotifyOn() {
+    try {
+      localStorage.removeItem(TOSS_NOTIFY_KEY);
+      clearLegacyNotifyFlags();
     } catch (_e) {
       /* ignore */
     }
@@ -805,17 +852,21 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
 
   function proceedTossNotifyAgreement() {
     if (!hasTossNotifyTemplate()) {
-      setTossNotifyOn();
-      afterNotifyEnabled();
+      setStatus("알림 동의문 코드가 없어요.", true);
+      renderNotifyCard();
       return;
     }
     requestTossNotifyAgreement().then(function (result) {
       if (result && result.ok) {
-        setTossNotifyOn();
         afterNotifyEnabled();
         return;
       }
-      setStatus("토스 알림 동의가 필요해요.", true);
+      if (result && result.reason === "rejected") {
+        clearTossNotifyOn();
+        setStatus("알림 수신을 거부했어요.", true);
+      } else {
+        setStatus("토스 알림 동의가 필요해요.", true);
+      }
       renderNotifyCard();
     });
   }
@@ -992,6 +1043,7 @@ import { hasApiBase, syncScheduleToApi } from "./pr-server.js";
     }
 
     loadPremium();
+    clearLegacyNotifyFlags();
     loadState();
     lastDateKey = todayKey();
     ensureDayBuckets();

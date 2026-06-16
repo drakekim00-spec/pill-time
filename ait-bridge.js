@@ -186,7 +186,16 @@ function requestNotificationAgreementByCode(templateCode) {
         options: { templateCode: templateCode },
         onEvent: function (event) {
           if (cleanup) cleanup();
-          finish({ ok: true, event: event });
+          var type = event && event.type;
+          if (type === "newAgreement" || type === "alreadyAgreed") {
+            finish({ ok: true, event: event });
+            return;
+          }
+          if (type === "agreementRejected") {
+            finish({ ok: false, reason: "rejected", event: event });
+            return;
+          }
+          finish({ ok: false, reason: "unknown_event", event: event });
         },
         onError: function (error) {
           if (cleanup) cleanup();
