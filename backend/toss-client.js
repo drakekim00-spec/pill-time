@@ -168,10 +168,43 @@ export function useTestPushApi() {
   return String(process.env.TOSS_PUSH_MODE || "live").toLowerCase() === "test";
 }
 
+export function parsePushDelivery(res) {
+  var body = res && res.data;
+  if (!body || body.resultType !== "SUCCESS" || !body.success) {
+    return {
+      ok: false,
+      sentPushCount: 0,
+      sentInboxCount: 0,
+      msgCount: 0,
+      error: body && body.error ? body.error : body,
+    };
+  }
+  var s = body.success;
+  var sentPushCount = s.sentPushCount || 0;
+  var sentInboxCount = s.sentInboxCount || 0;
+  return {
+    ok: sentPushCount + sentInboxCount > 0,
+    sentPushCount: sentPushCount,
+    sentInboxCount: sentInboxCount,
+    msgCount: s.msgCount || 0,
+    fail: s.fail || null,
+    detail: s.detail || null,
+  };
+}
+
 export function isPushSuccess(res) {
-  return !!(res && res.status >= 200 && res.status < 300 && res.data && res.data.resultType === "SUCCESS");
+  return parsePushDelivery(res).ok;
 }
 
 export async function sendScheduledPush(userKey, templateSetCode, context) {
-  return sendFunctionalMessage(userKey, templateSetCode, context || {});
+  var ctx = context || {};
+  var liveRes = await sendFunctionalMessage(userKey, templateSetCode, ctx);
+  if (parsePushDelivery(liveRes).ok) return liveRes;
+
+  var deploymentId = getDeploymentId();
+  if (!deploymentId) return liveRes;
+
+  var testRes = await sendTestMessage(userKey, templateSetCode, deploymentId, ctx);
+  if (parsePushDelivery(testRes).ok) return testRes;
+  return testRes;
 }

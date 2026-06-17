@@ -8,6 +8,7 @@ import {
   fetchLoginMe,
   isTossApiReady,
   isPushSuccess,
+  parsePushDelivery,
   sendFunctionalMessage,
   sendScheduledPush,
   sendTestMessage,
@@ -104,10 +105,12 @@ app.post("/api/push/test", async function (req, res) {
       return;
     }
     var result = await sendScheduledPush(userKey, TEMPLATE, {});
+    var delivery = parsePushDelivery(result);
     res.json({
-      ok: isPushSuccess(result),
+      ok: delivery.ok,
       status: result.status,
       pushMode: useTestPushApi() ? "test" : "live",
+      delivery: delivery,
       result: result.data,
     });
   } catch (err) {

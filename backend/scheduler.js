@@ -1,6 +1,6 @@
 import {
   isTossApiReady,
-  isPushSuccess,
+  parsePushDelivery,
   sendScheduledPush,
 } from "./toss-client.js";
 import { listActiveUsers, wasSent, markSent } from "./store.js";
@@ -87,18 +87,25 @@ async function tick() {
 
         try {
           var res = await sendScheduledPush(user.userKey, TEMPLATE, {});
-          if (isPushSuccess(res)) {
+          var delivery = parsePushDelivery(res);
+          if (delivery.ok) {
             markSent(now.dateKey, user.userKey, key);
-            console.log("[push] sent", user.userKey, med.name, time);
+            console.log("[push] sent", user.userKey, med.name, time, delivery);
             pushLog({
               at: new Date().toISOString(),
               ok: true,
               userKeyTail: String(user.userKey).slice(-6),
               med: med.name,
               time: time,
+              sentPushCount: delivery.sentPushCount,
+              sentInboxCount: delivery.sentInboxCount,
             });
           } else {
-            var failDetail = JSON.stringify(res.data || {});
+            var failDetail = JSON.stringify({
+              error: delivery.error || null,
+              fail: delivery.fail || null,
+              data: res.data || null,
+            });
             console.warn("[push] fail", user.userKey, time, failDetail);
             pushLog({
               at: new Date().toISOString(),
@@ -107,6 +114,8 @@ async function tick() {
               med: med.name,
               time: time,
               status: res.status,
+              sentPushCount: delivery.sentPushCount,
+              sentInboxCount: delivery.sentInboxCount,
               detail: failDetail,
             });
           }
