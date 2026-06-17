@@ -49,17 +49,66 @@ function save() {
 
 load();
 
+export function getStats() {
+  return {
+    users: Object.keys(state.users).length,
+    active: listActiveUsers().length,
+  };
+}
+
+function normalizeTime(value) {
+  var parts = String(value || "").trim().split(":");
+  if (parts.length < 2) return "";
+  var hour = parseInt(parts[0], 10);
+  var minute = parseInt(parts[1], 10);
+  if (isNaN(hour) || isNaN(minute)) return "";
+  return String(hour).padStart(2, "0") + ":" + String(minute).padStart(2, "0");
+}
+
+function normalizeMedicines(medicines) {
+  if (!Array.isArray(medicines)) return [];
+  return medicines.map(function (med) {
+    var item = Object.assign({}, med || {});
+    item.times = (item.times || [])
+      .map(normalizeTime)
+      .filter(function (time) {
+        return !!time;
+      });
+    return item;
+  });
+}
+
 export function upsertUser(userKey, payload) {
   var key = String(userKey);
   var prev = state.users[key] || {};
+  var medicines = Array.isArray(payload.medicines)
+    ? normalizeMedicines(payload.medicines)
+    : prev.medicines || [];
   state.users[key] = {
     userKey: key,
     notifyEnabled: !!payload.notifyEnabled,
-    medicines: Array.isArray(payload.medicines) ? payload.medicines : prev.medicines || [],
+    medicines: medicines,
     updatedAt: new Date().toISOString(),
   };
   save();
   return state.users[key];
+}
+
+export function listScheduleSummary() {
+  return listActiveUsers().map(function (user) {
+    return {
+      userKeyTail: String(user.userKey || "").slice(-6),
+      notifyEnabled: !!user.notifyEnabled,
+      updatedAt: user.updatedAt || null,
+      medicines: (user.medicines || []).map(function (med) {
+        return {
+          id: med.id,
+          name: med.name,
+          times: med.times || [],
+        };
+      }),
+    };
+  });
 }
 
 export function getUser(userKey) {
@@ -84,11 +133,4 @@ export function markSent(dateKey, userKey, doseKey) {
   if (!state.sent[dateKey][String(userKey)]) state.sent[dateKey][String(userKey)] = {};
   state.sent[dateKey][String(userKey)][doseKey] = true;
   save();
-}
-
-export function getStats() {
-  return {
-    users: Object.keys(state.users).length,
-    active: listActiveUsers().length,
-  };
 }

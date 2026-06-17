@@ -1,8 +1,8 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
-import { startScheduler } from "./scheduler.js";
-import { getStats, upsertUser } from "./store.js";
+import { startScheduler, getSchedulerStatus } from "./scheduler.js";
+import { getStats, listScheduleSummary, upsertUser } from "./store.js";
 import {
   exchangeAuthCode,
   fetchLoginMe,
@@ -43,7 +43,16 @@ app.get("/api/health", function (_req, res) {
 });
 
 app.get("/api/wake", function (_req, res) {
-  res.json({ ok: true, awake: true, mtls: isTossApiReady() });
+  res.json({ ok: true, awake: true, mtls: isTossApiReady(), kst: getSchedulerStatus().kst });
+});
+
+app.get("/api/scheduler/status", function (_req, res) {
+  res.json({
+    ok: true,
+    scheduler: getSchedulerStatus(),
+    schedules: listScheduleSummary(),
+    stats: getStats(),
+  });
 });
 
 app.post("/api/auth/session", async function (req, res) {
