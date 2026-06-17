@@ -1239,6 +1239,9 @@ import { hasApiBase, getStoredUserKey, syncScheduleToApi, wakeApiServer } from "
     clearLegacyNotifyFlags();
     loadState();
     wakeServer();
+    if (isTossNotifyOn() && getStoredUserKey()) {
+      pushScheduleToServer();
+    }
     lastDateKey = todayKey();
     ensureDayBuckets();
 
