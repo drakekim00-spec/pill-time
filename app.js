@@ -462,7 +462,7 @@ import { hasApiBase, getStoredUserKey, syncScheduleToApi, wakeApiServer } from "
     if (!result) return "알림 동의가 필요해요.";
     if (result.reason === "rejected") return "알림 수신을 거부했어요.";
     if (result.reason === "timeout") {
-      return "동의 창이 안 열렸어요. 토스 앱을 최신으로 올리고, 콘솔 동의문 코드를 확인해 주세요.";
+      return "동의 창이 안 열렸어요. 토스 앱을 최신으로 올린 뒤 다시 눌러 주세요.";
     }
     if (result.reason === "unsupported") {
       return "토스 앱에서 다시 열어 주세요.";
@@ -471,16 +471,16 @@ import { hasApiBase, getStoredUserKey, syncScheduleToApi, wakeApiServer } from "
       return "토스 앱을 최신 버전으로 업데이트한 뒤 다시 눌러 주세요.";
     }
     if (result.reason === "bad_template") {
-      return "동의문 코드가 콘솔과 달라요. 스마트발송 → 알림동의문 목록에서 코드를 복사해 알려 주세요.";
+      return "발송 코드가 콘솔과 달라요. 기능성 캠페인 발송 코드를 확인해 주세요.";
     }
     if (result.reason === "no_template") {
-      return "알림 동의문 코드가 없어요.";
+      return "알림 발송 코드가 없어요.";
     }
     if (result.reason === "unknown_event") {
       return "동의 결과를 못 읽었어요. 다시 눌러 주세요.";
     }
     if (result.reason === "error") {
-      return "동의 요청에 실패했어요. 콘솔 알림동의문 목록의 코드를 확인해 주세요.";
+      return "동의 요청에 실패했어요. 잠시 뒤 다시 눌러 주세요.";
     }
     return "토스 알림 동의가 필요해요.";
   }
@@ -863,13 +863,12 @@ import { hasApiBase, getStoredUserKey, syncScheduleToApi, wakeApiServer } from "
   }
 
   function hasTossNotifyTemplate() {
-    var cfg = window.PR_CONFIG || {};
-    return !!(cfg.notifyAgreementTemplateCode && String(cfg.notifyAgreementTemplateCode).trim());
+    return !!getNotifyTemplateCode();
   }
 
   function getNotifyTemplateCode() {
     var cfg = window.PR_CONFIG || {};
-    return String(cfg.notifyAgreementTemplateCode || "").trim();
+    return String(cfg.notifyAgreementTemplateCode || cfg.notifyTemplateSetCode || "").trim();
   }
 
   function clearLegacyNotifyFlags() {
@@ -1011,8 +1010,8 @@ import { hasApiBase, getStoredUserKey, syncScheduleToApi, wakeApiServer } from "
 
   function proceedTossNotifyAgreement(loginResult) {
     if (!hasTossNotifyTemplate()) {
-      setNotifyHint("알림 동의문 코드가 없어요.", true);
-      setStatus("알림 동의문 코드가 없어요.", true);
+      setNotifyHint("알림 발송 코드가 없어요.", true);
+      setStatus("알림 발송 코드가 없어요.", true);
       renderNotifyCard();
       resetNotifyButton();
       return;

@@ -21,7 +21,7 @@ if (!fs.existsSync(outWeb)) {
   process.exit(1);
 }
 
-for (const file of ["app.js", "app.css"]) {
+for (const file of ["app.js", "app.css", "sw.js", "manifest.json", "brand-icon.png"]) {
   const src = path.join(webRoot, file);
   if (fs.existsSync(src)) {
     fs.copyFileSync(src, path.join(outWeb, file));

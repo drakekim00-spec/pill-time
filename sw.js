@@ -1,5 +1,7 @@
 /* 복약 알림 — 백그라운드 알림 (서비스 워커) */
-var CACHE_NAME = "pill-reminder-v2";
+var CACHE_NAME = "pill-reminder-v3";
+var NOTIFY_ICON = "./brand-icon.png";
+var DUE_WINDOW_MIN = 5;
 var DB_NAME = "pill-reminder-sw";
 var DB_STORE = "state";
 var NOTIFY_TITLE = "💊 약 먹을 시간";
@@ -129,7 +131,7 @@ function computeWaitMs(state) {
     var diffMin = target - nowMin;
     var msUntil;
 
-    if (diffMin < -2) return;
+    if (diffMin < -(DUE_WINDOW_MIN + 1)) return;
     if (diffMin <= 1) {
       msUntil = 5000;
     } else {
@@ -159,8 +161,8 @@ function showDoseNotification(dose, diff) {
     body: body,
     tag: NOTIFY_TAG + "-" + dose.key,
     renotify: true,
-    icon: "./manifest.json",
-    badge: "./manifest.json",
+    icon: NOTIFY_ICON,
+    badge: NOTIFY_ICON,
     data: { doseKey: dose.key },
   });
 }
@@ -181,7 +183,7 @@ function checkDueAndNotify() {
 
       var target = timeToMinutes(dose.time);
       var diff = nowMin - target;
-      if (diff < 0 || diff > 2) return;
+      if (diff < 0 || diff > DUE_WINDOW_MIN) return;
 
       state.notified[dateKey][dose.key] = true;
       changed = true;
@@ -244,11 +246,20 @@ function startAlarms() {
 }
 
 self.addEventListener("install", function (event) {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(["./", "./index.html", "./app.css", "./app.js", "./manifest.json", "./sw.js"]);
-    }),
+    caches
+      .open(CACHE_NAME)
+      .then(function (cache) {
+        return Promise.allSettled([
+          cache.add("./sw.js"),
+          cache.add("./app.js"),
+          cache.add("./index.html"),
+          cache.add("./brand-icon.png"),
+        ]);
+      })
+      .then(function () {
+        return self.skipWaiting();
+      }),
   );
 });
 
@@ -284,19 +295,23 @@ self.addEventListener("activate", function (event) {
 self.addEventListener("message", function (event) {
   var data = event.data || {};
   if (data.type === "SYNC_STATE" && data.state) {
-    event.waitUntil(
-      saveState(data.state).then(function () {
+    saveState(data.state)
+      .then(function () {
         return startAlarms();
-      }),
-    );
+      })
+      .catch(function () {});
     return;
   }
   if (data.type === "START_ALARMS") {
-    event.waitUntil(startAlarms());
+    startAlarms().catch(function () {});
     return;
   }
   if (data.type === "CHECK_NOW") {
-    event.waitUntil(checkDueAndNotify());
+    checkDueAndNotify().catch(function () {});
+    return;
+  }
+  if (data.type === "SKIP_WAITING") {
+    self.skipWaiting();
   }
 });
 

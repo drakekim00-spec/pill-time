@@ -16,7 +16,7 @@
   API (나중에)          → backend/  (Render)
 
 [콘솔 업로드]
-  miniapp/new-miniapp.ait (또는 빌드 결과 .ait)
+  miniapp/pill-time.ait
 
 [참고 문서]
   c:\- App\AI학습용 - 앱인토스UI\앱인토스UI-최종-학습용.md

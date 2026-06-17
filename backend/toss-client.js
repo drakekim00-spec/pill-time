@@ -157,7 +157,7 @@ export async function sendTestMessage(userKey, templateSetCode, deploymentId, co
   return res;
 }
 
-var FALLBACK_DEPLOYMENT_ID = "019ecfbc-3442-734b-ade7-1550856fdc91";
+var FALLBACK_DEPLOYMENT_ID = "019ed4c9-3c93-7c13-b805-4c8a528cf3d2";
 
 export function getDeploymentId() {
   var id = String(process.env.TOSS_DEPLOYMENT_ID || "").trim();
@@ -165,10 +165,7 @@ export function getDeploymentId() {
 }
 
 export function useTestPushApi() {
-  var mode = String(process.env.TOSS_PUSH_MODE || "auto").toLowerCase();
-  if (mode === "live") return false;
-  if (mode === "test") return true;
-  return !!getDeploymentId();
+  return String(process.env.TOSS_PUSH_MODE || "live").toLowerCase() === "test";
 }
 
 export function isPushSuccess(res) {
@@ -176,12 +173,5 @@ export function isPushSuccess(res) {
 }
 
 export async function sendScheduledPush(userKey, templateSetCode, context) {
-  if (useTestPushApi()) {
-    var deploymentId = getDeploymentId();
-    if (!deploymentId) {
-      throw new Error("TOSS_DEPLOYMENT_ID 가 없어요 (테스트 발송용)");
-    }
-    return sendTestMessage(userKey, templateSetCode, deploymentId, context || {});
-  }
   return sendFunctionalMessage(userKey, templateSetCode, context || {});
 }

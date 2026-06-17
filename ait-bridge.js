@@ -212,7 +212,7 @@ function parseAgreementBridgeError(error) {
   return { reason: "error", detail: msg, error: error };
 }
 
-var AGREEMENT_CODE_CACHE_KEY = "pill-reminder-agree-template-code";
+var AGREEMENT_CODE_CACHE_KEY = "pill-reminder-agree-template-code-v2";
 
 function getCachedAgreementCode() {
   try {
@@ -238,10 +238,10 @@ function getAgreementCodesToTry(primaryCode) {
     if (!value || list.indexOf(value) !== -1) return;
     list.push(value);
   }
-  add(getCachedAgreementCode());
+  add(cfg.notifyTemplateSetCode);
   add(primaryCode);
   add(cfg.notifyAgreementTemplateCode);
-  add(cfg.notifyTemplateSetCode);
+  add(getCachedAgreementCode());
   add("pill-time-templateSetCode");
   return list;
 }
